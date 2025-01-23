@@ -6,12 +6,6 @@
   "type": "module",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
-  "exports": {
-    ".": {
-      "require": "./dist/cjs/index.js",
-      "import": "./dist/esm/index.js"
-    }
-  },
   "files": [
     "dist/*"
   ],
@@ -23,6 +17,11 @@
     "scripts": {
       "postbump": "yarn build && git add -f dist/"
     }
+  },
+  "private": false,
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "require": "./dist/cjs/index.cjs"
   },
   "scripts": {
     "release": "standard-version -a",
