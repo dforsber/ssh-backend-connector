@@ -50,16 +50,20 @@ export class SSHManager {
     const { remotePort, localPort, remoteHost = "127.0.0.1" } = config;
 
     return new Promise((resolve, reject) => {
-      conn.forwardIn(remoteHost, remotePort, (err) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        conn.forwardOut("127.0.0.1", localPort, remoteHost, remotePort, (err, channel) => {
-          if (err) reject(err);
-          else resolve(channel);
+      try {
+        conn.forwardIn(remoteHost, remotePort, (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            conn.forwardOut("127.0.0.1", localPort, remoteHost, remotePort, (err, channel) => {
+              if (err) reject(err);
+              else resolve(channel);
+            });
+          }
         });
-      });
+      } catch (err) {
+        reject(err);
+      }
     });
   }
 
