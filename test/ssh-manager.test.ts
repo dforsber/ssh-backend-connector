@@ -185,6 +185,7 @@ describe("SSHManager", () => {
       // Reset all mock implementations
       mockClient.forwardIn.mockReset();
       mockClient.forwardOut.mockReset();
+      mockClient.end.mockReset();
     });
 
     it("closes connection and removes from map", () => {
