@@ -109,7 +109,7 @@ describe("SSHStoreManager", () => {
   test("saveKeyPair handles optional name field", () => {
     const keyPairWithName = {
       ...mockKeyPair,
-      name: "My Key"
+      name: "My Key",
     };
     manager.saveKeyPair(keyPairWithName);
     expect(mockStore.set).toHaveBeenCalledWith(
