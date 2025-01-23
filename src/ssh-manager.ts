@@ -51,10 +51,13 @@ export class SSHManager {
 
     return new Promise((resolve, reject) => {
       conn.forwardIn(remoteHost, remotePort, (err) => {
-        if (err) reject(err);
+        if (err) {
+          reject(err);
+          return;
+        }
         conn.forwardOut("127.0.0.1", localPort, remoteHost, remotePort, (err, channel) => {
           if (err) reject(err);
-          resolve(channel);
+          else resolve(channel);
         });
       });
     });
