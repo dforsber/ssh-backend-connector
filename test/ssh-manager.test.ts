@@ -1,4 +1,4 @@
-import { Client } from "ssh2";
+import { Client, ClientChannel } from "ssh2";
 import { SSHManager } from "../src/ssh-manager";
 import { SSHStoreManager } from "../src/ssh-store";
 import { jest } from "@jest/globals";
@@ -42,7 +42,7 @@ describe("SSHManager", () => {
   });
 
   describe("connect", () => {
-    test("creates SSH connection successfully", async () => {
+    it("creates SSH connection successfully", async () => {
       mockStoreManager.getBackend.mockReturnValue(mockBackend);
       mockStoreManager.getKeyPair.mockReturnValue(mockKeyPair);
 
@@ -64,18 +64,18 @@ describe("SSHManager", () => {
       });
     });
 
-    test("throws when backend not found", async () => {
+    it("throws when backend not found", async () => {
       mockStoreManager.getBackend.mockReturnValue(null);
       await expect(manager.connect("nonexistent")).rejects.toThrow("Backend not found");
     });
 
-    test("throws when key pair not found", async () => {
+    it("throws when key pair not found", async () => {
       mockStoreManager.getBackend.mockReturnValue(mockBackend);
       mockStoreManager.getKeyPair.mockReturnValue(null);
       await expect(manager.connect(mockBackend.id)).rejects.toThrow("SSH key pair not found");
     });
 
-    test("handles connection error", async () => {
+    it("handles connection error", async () => {
       mockStoreManager.getBackend.mockReturnValue(mockBackend);
       mockStoreManager.getKeyPair.mockReturnValue(mockKeyPair);
 
@@ -91,24 +91,28 @@ describe("SSHManager", () => {
     });
   });
 
-  describe("setupTunnel", () => {
+  describe.only("setupTunnel", () => {
+    beforeEach(() => {
+      mockClient = new Client() as jest.Mocked<Client>;
+    });
+
     const tunnelConfig = {
       remotePort: 3000,
       localPort: 8080,
     };
 
-    test("creates tunnel successfully", async () => {
+    it("creates tunnel successfully", async () => {
       const mockChannel = {} as any;
       manager["connections"].set(mockBackend.id, mockClient);
 
       mockClient.forwardIn.mockImplementation((_host, _port, callback) => {
-        callback(undefined, undefined);
+        if (callback) callback(undefined, _port);
         return mockClient;
       });
 
       mockClient.forwardOut.mockImplementation(
         (_localHost, _localPort, _remoteHost, _remotePort, callback) => {
-          callback(null, mockChannel);
+          if (callback) callback(undefined, mockChannel);
           return mockClient;
         }
       );
@@ -129,17 +133,19 @@ describe("SSHManager", () => {
         expect.any(Function)
       );
     });
-    test("throws when not connected", async () => {
+
+    it("throws when not connected", async () => {
       await expect(manager.setupTunnel("nonexistent", tunnelConfig)).rejects.toThrow(
         "Not connected"
       );
     });
 
-    test("handles forwardIn error with specific message", async () => {
+    it("handles forwardIn error with specific message", async () => {
       manager["connections"].set(mockBackend.id, mockClient);
       const errorMessage = "Port already in use";
       mockClient.forwardIn.mockImplementation((_host, _port, callback) => {
-        callback(new Error(errorMessage), undefined);
+        console.log(callback);
+        if (callback) callback(new Error(errorMessage), _port);
         return mockClient;
       });
 
@@ -147,16 +153,16 @@ describe("SSHManager", () => {
       expect(mockClient.forwardOut).not.toHaveBeenCalled();
     });
 
-    test("handles forwardOut error with specific message", async () => {
+    it("handles forwardOut error with specific message", async () => {
       manager["connections"].set(mockBackend.id, mockClient);
       mockClient.forwardIn.mockImplementation((_host, _port, callback) => {
-        callback(undefined, undefined);
+        if (callback) callback(undefined, _port);
         return mockClient;
       });
 
       mockClient.forwardOut.mockImplementation(
         (_localHost, _localPort, _remoteHost, _remotePort, callback) => {
-          callback(new Error("Forward out failed"), undefined);
+          if (callback) callback(new Error("Forward out failed"), <ClientChannel>{});
           return mockClient;
         }
       );
@@ -174,7 +180,7 @@ describe("SSHManager", () => {
       mockClient = new Client() as jest.Mocked<Client>;
     });
 
-    test("closes connection and removes from map", () => {
+    it("closes connection and removes from map", () => {
       manager["connections"].set(mockBackend.id, mockClient);
       manager.disconnect(mockBackend.id);
 
@@ -182,7 +188,7 @@ describe("SSHManager", () => {
       expect(manager["connections"].has(mockBackend.id)).toBeFalsy();
     });
 
-    test("handles nonexistent connection gracefully", () => {
+    it("handles nonexistent connection gracefully", () => {
       manager.disconnect("nonexistent");
       expect(mockClient.end).not.toHaveBeenCalled();
     });
