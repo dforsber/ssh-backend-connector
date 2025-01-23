@@ -114,7 +114,7 @@ describe("SSHManager", () => {
       );
 
       const channel = await manager.setupTunnel(mockBackend.id, tunnelConfig);
-      
+
       expect(channel).toBe(mockChannel);
       expect(mockClient.forwardIn).toHaveBeenCalledWith(
         "127.0.0.1",
@@ -143,9 +143,7 @@ describe("SSHManager", () => {
         return mockClient;
       });
 
-      await expect(manager.setupTunnel(mockBackend.id, tunnelConfig)).rejects.toThrow(
-        errorMessage
-      );
+      await expect(manager.setupTunnel(mockBackend.id, tunnelConfig)).rejects.toThrow(errorMessage);
       expect(mockClient.forwardOut).not.toHaveBeenCalled();
     });
 
