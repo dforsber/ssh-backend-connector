@@ -1,6 +1,6 @@
 {
   "name": "ssh-backend-connector",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "author": "Dan Forsberg <dforsber@gmail.com>",
   "license": "MIT",
   "type": "module",
