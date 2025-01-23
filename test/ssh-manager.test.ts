@@ -94,6 +94,9 @@ describe("SSHManager", () => {
   describe.only("setupTunnel", () => {
     beforeEach(() => {
       mockClient = new Client() as jest.Mocked<Client>;
+      // Reset all mock implementations
+      mockClient.forwardIn.mockReset();
+      mockClient.forwardOut.mockReset();
     });
 
     const tunnelConfig = {
