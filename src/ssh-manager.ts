@@ -1,5 +1,11 @@
-import { Client } from "ssh2";
+import { Client, ClientChannel } from "ssh2";
 import { SSHStoreManager } from "./ssh-store.js";
+
+export interface TunnelConfig {
+  remotePort: number;
+  localPort: number;
+  remoteHost?: string;
+}
 
 export class SSHManager {
   private store: SSHStoreManager;
@@ -37,14 +43,19 @@ export class SSHManager {
     });
   }
 
-  async setupTunnel(backendId: string, remotePort: number): Promise<void> {
+  async setupTunnel(backendId: string, config: TunnelConfig): Promise<ClientChannel> {
     const conn = this.connections.get(backendId);
     if (!conn) throw new Error("Not connected");
 
+    const { remotePort, localPort, remoteHost = "127.0.0.1" } = config;
+
     return new Promise((resolve, reject) => {
-      conn.forwardIn("127.0.0.1", remotePort, (err) => {
+      conn.forwardIn(remoteHost, remotePort, (err) => {
         if (err) reject(err);
-        resolve();
+        conn.forwardOut("127.0.0.1", localPort, remoteHost, remotePort, (err, channel) => {
+          if (err) reject(err);
+          resolve(channel);
+        });
       });
     });
   }
