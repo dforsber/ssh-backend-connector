@@ -1,5 +1,5 @@
-import { encrypt, decrypt } from "./crypto";
-import { SSHKeyPair, Backend } from "./types";
+import { encrypt, decrypt } from "./crypto.js";
+import { SSHKeyPair, Backend } from "./types.js";
 const Store = require("electron-store");
 
 export class SSHStoreManager {

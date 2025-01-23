@@ -3,10 +3,18 @@ module.exports = {
   testEnvironment: "node",
   roots: ["<rootDir>/test"],
   testMatch: ["**/test/**/*.test.ts"],
-  moduleDirectories: ["node_modules", "src"],
-  moduleFileExtensions: ["ts", "js"],
-  transformIgnorePatterns: ["node_modules/(?!(electron-store|ssh2)/)"],
+  transform: {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        useESM: true,
+      },
+    ],
+  },
+  transformIgnorePatterns: ["node_modules/(?!(electron-store)/)"],
+  extensionsToTreatAsEsm: [".ts"],
   moduleNameMapper: {
-    "^electron-store$": "<rootDir>/test/mocks/electron-store.js",
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^electron-store$": "<rootDir>/test/mocks/electron-store.ts",
   },
 };

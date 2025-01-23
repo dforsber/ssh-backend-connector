@@ -1,5 +1,5 @@
 import { Client } from "ssh2";
-import { SSHStoreManager } from "./ssh-store";
+import { SSHStoreManager } from "./ssh-store.js";
 
 export class SSHManager {
   private store: SSHStoreManager;

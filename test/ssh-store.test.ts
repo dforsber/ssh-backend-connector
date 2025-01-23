@@ -1,6 +1,6 @@
+import { jest } from "@jest/globals";
 import { encrypt } from "../src/crypto";
 import { SSHStoreManager } from "../src/ssh-store";
-import { jest } from "@jest/globals";
 
 // Define mock methods type
 interface StoreMock {
