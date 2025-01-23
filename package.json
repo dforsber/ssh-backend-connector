@@ -12,6 +12,11 @@
       "import": "./dist/esm/index.js"
     }
   },
+  "standard-version": {
+    "scripts": {
+      "postbump": "yarn build && git add -f dist/"
+    }
+  },
   "scripts": {
     "release": "standard-version -a",
     "all": "yarn format && yarn lint && yarn build && yarn test",
