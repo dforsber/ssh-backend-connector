@@ -87,4 +87,39 @@ describe("SSHStoreManager", () => {
     const result = manager.getAllBackends();
     expect(result).toEqual([mockBackend]);
   });
+
+  test("getAllBackends returns empty array when no backends exist", () => {
+    mockStore.get.mockReturnValue(undefined);
+    const result = manager.getAllBackends();
+    expect(result).toEqual([]);
+  });
+
+  test("getKeyPair returns null for non-existent id", () => {
+    mockStore.get.mockReturnValue(undefined);
+    const result = manager.getKeyPair("non-existent");
+    expect(result).toBeNull();
+  });
+
+  test("getBackend returns null for non-existent id", () => {
+    mockStore.get.mockReturnValue(null);
+    const result = manager.getBackend("non-existent");
+    expect(result).toBeNull();
+  });
+
+  test("saveKeyPair handles optional name field", () => {
+    const keyPairWithName = {
+      ...mockKeyPair,
+      name: "My Key"
+    };
+    manager.saveKeyPair(keyPairWithName);
+    expect(mockStore.set).toHaveBeenCalledWith(
+      `keypairs.${keyPairWithName.id}`,
+      expect.objectContaining({
+        id: keyPairWithName.id,
+        name: "My Key",
+        privateKey: expect.any(String),
+        publicKey: expect.any(String),
+      })
+    );
+  });
 });
