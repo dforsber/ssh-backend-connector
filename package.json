@@ -12,6 +12,13 @@
       "import": "./dist/esm/index.js"
     }
   },
+  "files": [
+    "dist/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dforsber/ssh-backend-connector.git"
+  },
   "standard-version": {
     "scripts": {
       "postbump": "yarn build && git add -f dist/"
