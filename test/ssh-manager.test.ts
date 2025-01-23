@@ -91,7 +91,7 @@ describe("SSHManager", () => {
     });
   });
 
-  describe.only("setupTunnel", () => {
+  describe("setupTunnel", () => {
     beforeEach(() => {
       mockClient = new Client() as jest.Mocked<Client>;
       // Reset all mock implementations
@@ -181,6 +181,9 @@ describe("SSHManager", () => {
   describe("disconnect", () => {
     beforeEach(() => {
       mockClient = new Client() as jest.Mocked<Client>;
+      // Reset all mock implementations
+      mockClient.forwardIn.mockReset();
+      mockClient.forwardOut.mockReset();
     });
 
     it("closes connection and removes from map", () => {
