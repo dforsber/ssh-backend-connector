@@ -114,7 +114,20 @@ describe("SSHManager", () => {
       );
 
       const channel = await manager.setupTunnel(mockBackend.id, tunnelConfig);
+      
       expect(channel).toBe(mockChannel);
+      expect(mockClient.forwardIn).toHaveBeenCalledWith(
+        "127.0.0.1",
+        tunnelConfig.remotePort,
+        expect.any(Function)
+      );
+      expect(mockClient.forwardOut).toHaveBeenCalledWith(
+        "127.0.0.1",
+        tunnelConfig.localPort,
+        "127.0.0.1",
+        tunnelConfig.remotePort,
+        expect.any(Function)
+      );
     });
     test("throws when not connected", async () => {
       await expect(manager.setupTunnel("nonexistent", tunnelConfig)).rejects.toThrow(
@@ -122,19 +135,21 @@ describe("SSHManager", () => {
       );
     });
 
-    test("handles forwardIn error", async () => {
+    test("handles forwardIn error with specific message", async () => {
       manager["connections"].set(mockBackend.id, mockClient);
+      const errorMessage = "Port already in use";
       mockClient.forwardIn.mockImplementation((_host, _port, callback) => {
-        callback(new Error("Forward failed"), undefined);
+        callback(new Error(errorMessage), undefined);
         return mockClient;
       });
 
       await expect(manager.setupTunnel(mockBackend.id, tunnelConfig)).rejects.toThrow(
-        "Forward failed"
+        errorMessage
       );
+      expect(mockClient.forwardOut).not.toHaveBeenCalled();
     });
 
-    test("handles forwardOut error", async () => {
+    test("handles forwardOut error with specific message", async () => {
       manager["connections"].set(mockBackend.id, mockClient);
       mockClient.forwardIn.mockImplementation((_host, _port, callback) => {
         callback(undefined, undefined);
@@ -151,6 +166,8 @@ describe("SSHManager", () => {
       await expect(manager.setupTunnel(mockBackend.id, tunnelConfig)).rejects.toThrow(
         "Forward out failed"
       );
+      expect(mockClient.forwardIn).toHaveBeenCalled();
+      expect(mockClient.forwardOut).toHaveBeenCalled();
     });
   });
 
