@@ -26,7 +26,12 @@ export class JSONStore {
   }
 
   async init(): Promise<void> {
-    this.data = await this.loadStore();
+    try {
+      this.data = await this.loadStore();
+    } catch (error) {
+      // Ensure error is propagated
+      throw error;
+    }
   }
 
   private async loadStore(): Promise<Record<string, unknown>> {
