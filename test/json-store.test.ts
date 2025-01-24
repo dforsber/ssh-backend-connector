@@ -48,7 +48,14 @@ describe("JSONStore", () => {
 
     test("sets and gets value", async () => {
       await store.set("test", { value: "test" });
-      expect(writeFile).toHaveBeenCalledWith(testPath, expect.any(String));
+      expect(writeFile).toHaveBeenCalledWith(
+        `${testPath}.tmp`,
+        expect.any(String),
+        expect.objectContaining({
+          mode: 0o600,
+          flag: "wx"
+        })
+      );
       const value = await store.get("test");
       expect(value).toEqual({ value: "test" });
     });
