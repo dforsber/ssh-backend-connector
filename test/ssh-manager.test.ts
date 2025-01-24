@@ -124,7 +124,7 @@ describe("SSHManager", () => {
 
       // Create manager with max 1 connection
       const managerWithLimit = new SSHManager(mockStoreManager, {
-        maxConcurrentConnections: 1
+        maxConcurrentConnections: 1,
       });
 
       // First connection should succeed

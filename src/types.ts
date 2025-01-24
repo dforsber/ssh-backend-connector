@@ -20,6 +20,6 @@ export interface Backend {
 }
 
 export interface SSHManagerConfig {
-  connectionTimeout?: number;  // Connection timeout in milliseconds
-  maxConcurrentConnections?: number;  // Maximum number of concurrent connections
+  connectionTimeout?: number; // Connection timeout in milliseconds
+  maxConcurrentConnections?: number; // Maximum number of concurrent connections
 }

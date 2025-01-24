@@ -31,8 +31,8 @@ export class CryptoWrapper {
     try {
       this.key = scryptSync(password, this.salt, 32, {
         N: 16384, // CPU/memory cost parameter (must be power of 2)
-        r: 8,     // Block size parameter
-        p: 1,     // Parallelization parameter
+        r: 8, // Block size parameter
+        p: 1, // Parallelization parameter
         maxmem: 32 * 1024 * 1024, // 32MB memory limit
       });
 

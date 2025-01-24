@@ -1,5 +1,6 @@
 import { Client, ClientChannel } from "ssh2";
 import { SSHStoreManager } from "./ssh-store";
+import { SSHManagerConfig } from "./types";
 
 export interface TunnelConfig {
   remotePort: number;
@@ -50,7 +51,7 @@ export class SSHManager {
 
   async connect(backendId: string): Promise<Client> {
     this.checkRateLimit(backendId);
-    
+
     if (this.connections.size >= this.maxConcurrentConnections) {
       throw new Error(`Maximum concurrent connections (${this.maxConcurrentConnections}) reached`);
     }

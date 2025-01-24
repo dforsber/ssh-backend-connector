@@ -11,6 +11,7 @@ export class JSONStore {
 
   constructor(filePath: string, maxFileSizeBytes = JSONStore.DEFAULT_MAX_FILE_SIZE) {
     // Prevent path traversal and other invalid paths
+    this.maxFileSizeBytes = maxFileSizeBytes;
     try {
       const normalizedPath = normalize(filePath);
 
@@ -111,10 +112,12 @@ export class JSONStore {
     // Create a copy of data with the new value to check total size
     const newData = { ...this.data, [key]: value };
     const jsonData = JSON.stringify(newData, null, 2);
-    const byteSize = Buffer.byteLength(jsonData, 'utf8');
-    
+    const byteSize = Buffer.byteLength(jsonData, "utf8");
+
     if (byteSize > this.maxFileSizeBytes) {
-      throw new Error(`File size (${byteSize} bytes) exceeds maximum allowed size (${this.maxFileSizeBytes} bytes)`);
+      throw new Error(
+        `File size (${byteSize} bytes) exceeds maximum allowed size (${this.maxFileSizeBytes} bytes)`
+      );
     }
 
     this.data[key] = value;
