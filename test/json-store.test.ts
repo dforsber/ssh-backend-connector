@@ -37,10 +37,10 @@ describe("JSONStore", () => {
 
     test("handles non-Error constructor failures", () => {
       // Mock normalize to throw a non-Error object
-      jest.spyOn(require('path'), 'normalize').mockImplementationOnce(() => {
+      jest.spyOn(require("path"), "normalize").mockImplementationOnce(() => {
         throw "Not an error object";
       });
-      
+
       expect(() => new JSONStore("test/store.json")).toThrow("Invalid file path");
     });
   });
@@ -76,7 +76,7 @@ describe("JSONStore", () => {
       (existsSync as jest.Mock).mockReturnValue(true);
       (readFile as jest.Mock).mockResolvedValue("invalid json");
       await expect(store.init()).rejects.toThrow(SyntaxError);
-      
+
       // Test with corrupted JSON that might parse but is not an object
       (readFile as jest.Mock).mockResolvedValue('"not an object"');
       await expect(store.init()).rejects.toThrow("Invalid store format");

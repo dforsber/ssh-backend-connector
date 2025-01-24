@@ -45,7 +45,7 @@ export class SSHStoreManager {
 
   async saveKeyPair(keyPair: SSHKeyPair): Promise<void> {
     if (!this.crypto) throw new Error("Connect ssh store manager first");
-    
+
     // Validate key pair
     if (!keyPair.id || !keyPair.privateKey || !keyPair.publicKey) {
       throw new Error("Invalid key pair data");
@@ -53,7 +53,7 @@ export class SSHStoreManager {
     if (!/^[a-zA-Z0-9-_]+$/.test(keyPair.id)) {
       throw new Error("Invalid key pair ID format");
     }
-    
+
     const encrypted = {
       ...keyPair,
       privateKey: this.crypto.encrypt(keyPair.privateKey),

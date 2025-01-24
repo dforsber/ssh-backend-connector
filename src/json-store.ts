@@ -1,7 +1,7 @@
 // store.ts
 import { readFile, writeFile, mkdir, rename, unlink } from "fs/promises";
 import { existsSync } from "fs";
-import { dirname, normalize, basename, resolve } from "path";
+import { dirname, normalize } from "path";
 
 export class JSONStore {
   private data: Record<string, unknown>;
@@ -11,17 +11,16 @@ export class JSONStore {
     // Prevent path traversal and other invalid paths
     try {
       const normalizedPath = normalize(filePath);
-      const resolvedPath = resolve(normalizedPath);
-      
-      if (filePath.includes('..') || normalizedPath.includes('..')) {
+
+      if (filePath.includes("..") || normalizedPath.includes("..")) {
         throw new Error("Invalid file path: contains path traversal");
       }
-      
+
       // Check if path contains invalid characters or is absolute
       if (!/^[a-zA-Z0-9/._-]+$/.test(filePath)) {
         throw new Error("Invalid file path: contains invalid characters");
       }
-      
+
       this.filePath = normalizedPath;
     } catch (error) {
       if (error instanceof Error) {
@@ -52,7 +51,7 @@ export class JSONStore {
     }
     const content = await readFile(this.filePath, "utf-8");
     const parsed = JSON.parse(content);
-    if (typeof parsed !== 'object' || parsed === null) {
+    if (typeof parsed !== "object" || parsed === null) {
       throw new Error("Invalid store format");
     }
     return parsed;
