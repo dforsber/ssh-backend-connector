@@ -8,12 +8,14 @@
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
-      "node": {
-        "import": "./dist/esm/index.js",
-        "require": "./dist/cjs/index.js"
+      "import": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/esm/index.js"
       },
-      "default": "./dist/cjs/index.js"
+      "require": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
     }
   },
   "files": [
@@ -34,8 +36,8 @@
     "all": "yarn format && yarn lint && yarn build && yarn test",
     "lint": "eslint -c eslint.config.cjs src",
     "lint:fix": "eslint -c eslint.config.cjs src --fix",
-    "build:esm": "esbuild src/*.ts --bundle --platform=node --format=esm --outdir=dist/esm --external:cpu-features --external:ssh2",
-    "build:cjs": "esbuild src/*.ts --bundle --platform=node --format=cjs --outdir=dist/cjs --external:cpu-features --external:ssh2",
+    "build:esm": "esbuild src/index.ts --bundle --platform=node --format=esm --outdir=dist/esm --external:cpu-features --external:ssh2",
+    "build:cjs": "esbuild src/index.ts --bundle --platform=node --format=cjs --outdir=dist/cjs --external:cpu-features --external:ssh2",
     "build:types": "tsc -p tsconfig.types.json",
     "build": "rm -rf dist/ && yarn build:esm && yarn build:cjs && yarn build:types",
     "test": "jest",
