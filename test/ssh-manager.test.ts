@@ -159,6 +159,17 @@ describe("SSHManager", () => {
         "Forward out failed"
       );
     });
+
+    test("handles general tunnel setup error", async () => {
+      manager["connections"].set(mockBackend.id, mockClient);
+      mockClient.forwardIn.mockImplementation(() => {
+        throw new Error("General tunnel error");
+      });
+
+      await expect(manager.setupTunnel(mockBackend.id, tunnelConfig)).rejects.toThrow(
+        "General tunnel error"
+      );
+    });
   });
 
   describe("disconnect", () => {
