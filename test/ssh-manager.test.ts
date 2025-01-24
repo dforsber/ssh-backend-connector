@@ -95,6 +95,29 @@ describe("SSHManager", () => {
       await expect(manager.connect(mockBackend.id)).rejects.toThrow("Connection failed");
     });
 
+    test("handles connection timeout", async () => {
+      mockStoreManager.getBackend.mockResolvedValue(mockBackend);
+      mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
+
+      // Mock a connection that never calls 'ready'
+      mockClient.on.mockImplementation(function (this: any) {
+        return this;
+      });
+
+      // Create manager with short timeout
+      const managerWithTimeout = new SSHManager(mockStoreManager, {
+        connectionTimeout: 100 // 100ms timeout
+      });
+
+      await expect(managerWithTimeout.connect(mockBackend.id)).rejects.toThrow(
+        "Connection timeout after 100ms"
+      );
+      
+      // Verify connection is cleaned up
+      expect(mockClient.end).toHaveBeenCalled();
+      expect(managerWithTimeout["connections"].size).toBe(0);
+    });
+
     test("resets attempt count after reset time", async () => {
       const backendId = "test-backend";
       const oldTime = Date.now() - 400000; // Older than attemptResetTimeMs (300000)
