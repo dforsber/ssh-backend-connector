@@ -5,9 +5,11 @@
   "license": "MIT",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
   "exports": {
     "require": "./dist/cjs/index.js",
-    "import": "./dist/esm/index.js"
+    "import": "./dist/esm/index.js",
+    "types": "./dist/types/index.d.ts"
   },
   "files": [
     "dist/*"
@@ -29,7 +31,8 @@
     "lint:fix": "eslint -c eslint.config.cjs src --fix",
     "build:esm": "esbuild src/*.ts --bundle --platform=node --format=esm --outdir=dist/esm --external:cpu-features --external:ssh2",
     "build:cjs": "esbuild src/*.ts --bundle --platform=node --format=cjs --outdir=dist/cjs --external:cpu-features --external:ssh2",
-    "build": "rm -rf dist/ && yarn build:esm && yarn build:cjs",
+    "build:types": "tsc -p tsconfig.types.json",
+    "build": "rm -rf dist/ && yarn build:esm && yarn build:cjs && yarn build:types",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
