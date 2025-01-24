@@ -105,22 +105,25 @@ describe("SSHStoreManager", () => {
     });
 
     test("throws when crypto verification data mismatch", async () => {
-      // Mock CryptoWrapper to simulate decryption mismatch
-      jest.mock("../src/crypto-wrapper", () => ({
-        CryptoWrapper: jest.fn().mockImplementation(() => ({
-          getSalt: () => TEST_SALT,
-          encrypt: () => "encrypted-data",
-          decrypt: () => "wrong-data",
-          destroy: jest.fn()
-        }))
-      }));
+      // Mock get to return valid salt
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return TEST_SALT;
+        return null;
+      });
 
-      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
+      // Create a new instance after setting up the mock
+      const testManager = new SSHStoreManager();
+      
+      // Mock the crypto verification to fail by returning wrong data
+      jest.spyOn(CryptoWrapper.prototype, 'decrypt').mockImplementation(() => "wrong-data");
+
+      await expect(testManager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
 
       // Verify crypto is cleaned up
-      expect(await manager.getKeyPair("any-id").catch((e) => e.message)).toBe(
-        "Connect ssh store manager first"
-      );
+      await expect(testManager.getKeyPair("any-id")).rejects.toThrow("Connect ssh store manager first");
+
+      // Restore the original implementation
+      jest.restoreAllMocks();
     });
   });
 
