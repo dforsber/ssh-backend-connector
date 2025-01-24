@@ -99,8 +99,15 @@ describe("JSONStore", () => {
     });
 
     test("handles JSON parsing error", async () => {
+      // Mock existsSync to return true (file exists)
       (existsSync as jest.Mock).mockReturnValue(true);
+      
+      // Mock stat to return valid permissions
+      (stat as jest.Mock).mockResolvedValue({ mode: 0o600 });
+      
+      // Mock readFile to return invalid JSON
       (readFile as jest.Mock).mockResolvedValue("invalid json");
+      
       await expect(store.init()).rejects.toThrow(SyntaxError);
 
       // Test with corrupted JSON that might parse but is not an object
