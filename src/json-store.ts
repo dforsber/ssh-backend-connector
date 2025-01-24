@@ -8,20 +8,27 @@ export class JSONStore {
   private filePath: string;
 
   constructor(filePath: string) {
-    // Prevent path traversal
-    if (filePath.includes('..')) {
+    // Prevent path traversal and other invalid paths
+    try {
+      const normalizedPath = normalize(filePath);
+      const resolvedPath = resolve(normalizedPath);
+      
+      if (filePath.includes('..') || normalizedPath.includes('..')) {
+        throw new Error("Invalid file path: contains path traversal");
+      }
+      
+      // Check if path contains invalid characters or is absolute
+      if (!/^[a-zA-Z0-9/._-]+$/.test(filePath)) {
+        throw new Error("Invalid file path: contains invalid characters");
+      }
+      
+      this.filePath = normalizedPath;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
       throw new Error("Invalid file path");
     }
-    
-    const normalizedPath = normalize(filePath);
-    const resolvedPath = normalize(dirname(normalizedPath) + '/' + basename(normalizedPath));
-    const absolutePath = normalize(resolve(normalizedPath));
-    const absoluteResolved = normalize(resolve(resolvedPath));
-    
-    if (normalizedPath !== resolvedPath || absolutePath !== absoluteResolved) {
-      throw new Error("Invalid file path");
-    }
-    this.filePath = normalizedPath;
     this.data = {};
   }
 

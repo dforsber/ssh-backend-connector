@@ -17,9 +17,23 @@ describe("JSONStore", () => {
     jest.clearAllMocks();
   });
 
-  test("throws error on path traversal attempt", () => {
-    expect(() => new JSONStore("../test/store.json")).toThrow("Invalid file path");
-    expect(() => new JSONStore("test/../store.json")).toThrow("Invalid file path");
+  describe("constructor validation", () => {
+    test("throws error on path traversal attempt", () => {
+      expect(() => new JSONStore("../test/store.json")).toThrow("contains path traversal");
+      expect(() => new JSONStore("test/../store.json")).toThrow("contains path traversal");
+    });
+
+    test("throws error on invalid characters", () => {
+      expect(() => new JSONStore("test/$tore.json")).toThrow("contains invalid characters");
+      expect(() => new JSONStore("test/st*re.json")).toThrow("contains invalid characters");
+      expect(() => new JSONStore("test/store?.json")).toThrow("contains invalid characters");
+    });
+
+    test("accepts valid paths", () => {
+      expect(() => new JSONStore("test/store.json")).not.toThrow();
+      expect(() => new JSONStore("test/sub-dir/store.json")).not.toThrow();
+      expect(() => new JSONStore("test/sub_dir/store.json")).not.toThrow();
+    });
   });
 
   describe("init", () => {
