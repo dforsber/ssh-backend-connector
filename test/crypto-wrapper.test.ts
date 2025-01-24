@@ -62,6 +62,13 @@ describe("CryptoWrapper", () => {
     );
   });
 
+  test("throws error for too long password", () => {
+    const tooLongPassword = "A".repeat(129) + "a1!"; // 132 chars with required complexity
+    expect(() => new CryptoWrapper(tooLongPassword)).toThrow(
+      "Password must not exceed 128 characters"
+    );
+  });
+
   test("throws error for empty password", () => {
     expect(() => new CryptoWrapper("")).toThrow("Password must be at least 12 characters long");
   });
