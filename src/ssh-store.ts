@@ -53,4 +53,20 @@ export class SSHStoreManager {
     const backends = await Promise.all(backendKeys.map((k) => this.store.get<Backend>(k)));
     return backends.filter((b): b is Backend => b !== null && b !== undefined);
   }
+
+  async deleteBackend(id: string): Promise<void> {
+    await this.store.delete(`backends.${id}`);
+  }
+
+  async deleteKeyPair(id: string): Promise<void> {
+    await this.store.delete(`keypairs.${id}`);
+  }
+
+  async getAllKeyPairs(): Promise<SSHKeyPair[]> {
+    if (!this.crypto) throw new Error("Connect ssh store manager first");
+    const keys = await this.store.keys();
+    const keyPairKeys = keys.filter((k) => k.startsWith("keypairs."));
+    const keyPairs = await Promise.all(keyPairKeys.map((k) => this.getKeyPair(k.replace("keypairs.", ""))));
+    return keyPairs.filter((k): k is SSHKeyPair => k !== null);
+  }
 }

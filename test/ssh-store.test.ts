@@ -1,15 +1,14 @@
 import { SSHStoreManager } from "../src/ssh-store";
 import { JSONStore } from "../src/json-store";
 import { type SSHKeyPair, type Backend } from "../src/types";
-import { CryptoWrapper } from "../src/crypto-wrapper";
 
 jest.mock("../src/json-store");
 
 describe("SSHStoreManager", () => {
   let manager: SSHStoreManager;
   let mockStore: jest.Mocked<JSONStore>;
-  const TEST_PASSWORD = "test-password";
-  const TEST_SALT = "test-salt";
+  const TEST_PASSWORD = "test-password-longer-than-32-chars-123456";
+  const TEST_SALT = "0123456789abcdef";
 
   const mockKeyPair: SSHKeyPair = {
     id: "key1",
@@ -35,18 +34,48 @@ describe("SSHStoreManager", () => {
       delete: jest.fn(),
     } as unknown as jest.Mocked<JSONStore>;
 
-    mockStore.get.mockImplementation(async (key) => {
-      if (key === "crypto.salt") return TEST_SALT;
-      return null;
-    });
-
     (JSONStore as jest.MockedClass<typeof JSONStore>).mockImplementation(() => mockStore);
 
     manager = new SSHStoreManager();
-    await manager.connect(TEST_PASSWORD);
+  });
+
+  describe("connect", () => {
+    test("initializes store and creates new salt if none exists", async () => {
+      mockStore.get.mockResolvedValue(null);
+      await manager.connect(TEST_PASSWORD);
+      
+      expect(mockStore.init).toHaveBeenCalled();
+      expect(mockStore.get).toHaveBeenCalledWith("crypto.salt");
+      expect(mockStore.set).toHaveBeenCalledWith("crypto.salt", expect.any(String));
+    });
+
+    test("uses existing salt if available", async () => {
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return TEST_SALT;
+        return null;
+      });
+
+      await manager.connect(TEST_PASSWORD);
+      
+      expect(mockStore.init).toHaveBeenCalled();
+      expect(mockStore.get).toHaveBeenCalledWith("crypto.salt");
+      expect(mockStore.set).not.toHaveBeenCalledWith("crypto.salt", expect.any(String));
+    });
+
+    test("throws error if called without password", async () => {
+      await expect(manager.connect("")).rejects.toThrow("Password is required");
+    });
   });
 
   describe("keyPair operations", () => {
+    beforeEach(async () => {
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return TEST_SALT;
+        return null;
+      });
+      await manager.connect(TEST_PASSWORD);
+    });
+
     test("saveKeyPair encrypts and stores key pair", async () => {
       await manager.saveKeyPair(mockKeyPair);
 
@@ -61,30 +90,79 @@ describe("SSHStoreManager", () => {
     });
 
     test("getKeyPair retrieves and decrypts key pair", async () => {
-      const crypto = new CryptoWrapper(TEST_PASSWORD, TEST_SALT);
-
-      const encryptedData = {
-        id: mockKeyPair.id,
-        privateKey: crypto.encrypt(mockKeyPair.privateKey),
-        publicKey: crypto.encrypt(mockKeyPair.publicKey),
-      };
-
+      // First save the key pair
+      await manager.saveKeyPair(mockKeyPair);
+      
+      // Capture the encrypted data
+      const encryptedData = (mockStore.set as jest.Mock).mock.calls[0][1];
+      
+      // Setup mock to return the encrypted data
       mockStore.get.mockImplementation(async (key) => {
         if (key === "crypto.salt") return TEST_SALT;
-        if (key.startsWith("keypairs.")) return encryptedData;
+        if (key === `keypairs.${mockKeyPair.id}`) return encryptedData;
         return null;
       });
 
       const result = await manager.getKeyPair(mockKeyPair.id);
-      expect(result).toEqual({
-        id: mockKeyPair.id,
-        privateKey: mockKeyPair.privateKey,
-        publicKey: mockKeyPair.publicKey,
+      expect(result).toEqual(mockKeyPair);
+    });
+
+    test("getKeyPair returns null for non-existent key", async () => {
+      const result = await manager.getKeyPair("nonexistent");
+      expect(result).toBeNull();
+    });
+
+    test("throws error when trying to save key pair without connecting first", async () => {
+      manager = new SSHStoreManager();
+      await expect(manager.saveKeyPair(mockKeyPair)).rejects.toThrow("Connect ssh store manager first");
+    });
+
+    test("throws error when trying to get key pair without connecting first", async () => {
+      manager = new SSHStoreManager();
+      await expect(manager.getKeyPair(mockKeyPair.id)).rejects.toThrow("Connect ssh store manager first");
+    });
+
+    test("getAllKeyPairs returns all key pairs", async () => {
+      const otherKeyPair = { ...mockKeyPair, id: "key2" };
+      
+      await manager.saveKeyPair(mockKeyPair);
+      await manager.saveKeyPair(otherKeyPair);
+
+      mockStore.keys.mockResolvedValue([`keypairs.${mockKeyPair.id}`, `keypairs.${otherKeyPair.id}`]);
+      
+      const savedPairs = await Promise.all([
+        manager.getKeyPair(mockKeyPair.id),
+        manager.getKeyPair(otherKeyPair.id),
+      ]);
+
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return TEST_SALT;
+        if (key === `keypairs.${mockKeyPair.id}`) return savedPairs[0];
+        if (key === `keypairs.${otherKeyPair.id}`) return savedPairs[1];
+        return null;
       });
+
+      const results = await manager.getAllKeyPairs();
+      expect(results).toHaveLength(2);
+      expect(results).toContainEqual(mockKeyPair);
+      expect(results).toContainEqual(otherKeyPair);
+    });
+
+    test("deleteKeyPair removes key pair", async () => {
+      await manager.deleteKeyPair(mockKeyPair.id);
+      expect(mockStore.delete).toHaveBeenCalledWith(`keypairs.${mockKeyPair.id}`);
     });
   });
 
   describe("backend operations", () => {
+    beforeEach(async () => {
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return TEST_SALT;
+        return null;
+      });
+      await manager.connect(TEST_PASSWORD);
+    });
+
     test("saveBackend stores backend configuration", async () => {
       await manager.saveBackend(mockBackend);
       expect(mockStore.set).toHaveBeenCalledWith(`backends.${mockBackend.id}`, mockBackend);
@@ -112,19 +190,28 @@ describe("SSHStoreManager", () => {
         keyPairId: "key2",
       };
 
-      mockStore.keys.mockResolvedValue([`backends.${mockBackend.id}`, "backends.other"]);
-
-      mockStore.get.mockResolvedValueOnce(mockBackend).mockResolvedValueOnce(otherBackend);
+      mockStore.keys.mockResolvedValue([`backends.${mockBackend.id}`, `backends.${otherBackend.id}`]);
+      mockStore.get
+        .mockResolvedValueOnce(mockBackend)
+        .mockResolvedValueOnce(otherBackend);
 
       const results = await manager.getAllBackends();
       expect(results).toHaveLength(2);
-      expect(results[0]).toEqual(mockBackend);
-      expect(results[1]).toEqual(otherBackend);
+      expect(results).toContainEqual(mockBackend);
+      expect(results).toContainEqual(otherBackend);
     });
-  });
 
-  test("init initializes store", async () => {
-    await manager.connect(TEST_PASSWORD);
-    expect(mockStore.init).toHaveBeenCalled();
+    test("deleteBackend removes backend", async () => {
+      await manager.deleteBackend(mockBackend.id);
+      expect(mockStore.delete).toHaveBeenCalledWith(`backends.${mockBackend.id}`);
+    });
+
+    test("getAllBackends handles missing backends gracefully", async () => {
+      mockStore.keys.mockResolvedValue([`backends.${mockBackend.id}`]);
+      mockStore.get.mockResolvedValue(null);
+
+      const results = await manager.getAllBackends();
+      expect(results).toHaveLength(0);
+    });
   });
 });
