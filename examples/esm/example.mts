@@ -33,8 +33,11 @@ async function main(): Promise<void> {
     // Save the backend configuration
     await storeManager.saveBackend(backend);
 
-    // Create an SSH manager instance and connect
-    const sshManager = new SSHManager(storeManager);
+    // Create an SSH manager instance with custom configuration
+    const sshManager = new SSHManager(storeManager, {
+      connectionTimeout: 20000,        // 20 seconds
+      maxConcurrentConnections: 5      // Maximum 5 concurrent connections
+    });
     const connection = await sshManager.connect(backend.id);
     console.log("Connected successfully!");
 

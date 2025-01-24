@@ -18,3 +18,8 @@ export interface Backend {
   username: string;
   keyPairId: string;
 }
+
+export interface SSHManagerConfig {
+  connectionTimeout?: number;  // Connection timeout in milliseconds
+  maxConcurrentConnections?: number;  // Maximum number of concurrent connections
+}
