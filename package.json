@@ -30,6 +30,7 @@
     "release": "standard-version -a",
     "all": "yarn format && yarn lint && yarn build && yarn test",
     "example:esm": "tsx examples/esm/example.mts",
+    "example:cjs": "node examples/cjs/example.cjs",
     "lint": "eslint -c eslint.config.cjs src",
     "lint:fix": "eslint -c eslint.config.cjs src --fix",
     "build:esm": "esbuild src/index.ts --bundle --platform=node --format=esm --outdir=dist/esm --external:cpu-features --external:ssh2",
