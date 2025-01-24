@@ -21,7 +21,6 @@ async function main(): Promise<void> {
     keyPairId: "key1",
   };
 
-  try {
     // Create and save an SSH key pair first
     // Import the test keys
     const { testKeys } = await import("../test-keys/keys.js");
@@ -36,7 +35,9 @@ async function main(): Promise<void> {
     // Save the backend configuration
     await storeManager.saveBackend(backend);
 
-    // Connect to the backend
+    // Create an SSH manager instance and connect
+    const sshManager = new SSHStoreManager("./ssh-store.json");
+    await sshManager.connect("your-secure-password");
     const connection = await sshManager.connect(backend.id);
     console.log("Connected successfully!");
 
