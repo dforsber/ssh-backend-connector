@@ -68,7 +68,14 @@ describe("JSONStore", () => {
     test("deletes value", async () => {
       await store.set("test", { value: "test" });
       await store.delete("test");
-      expect(writeFile).toHaveBeenCalledWith(testPath, expect.any(String));
+      expect(writeFile).toHaveBeenCalledWith(
+        `${testPath}.tmp`,
+        expect.any(String),
+        expect.objectContaining({
+          mode: 0o600,
+          flag: "wx"
+        })
+      );
       const value = await store.get("test");
       expect(value).toBeNull();
     });
