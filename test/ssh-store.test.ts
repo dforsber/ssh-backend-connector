@@ -114,14 +114,18 @@ describe("SSHStoreManager", () => {
 
       // Create a new instance after setting up the mock
       const testManager = new SSHStoreManager();
-      
-      // Mock the crypto verification to fail by returning wrong data
-      jest.spyOn(CryptoWrapper.prototype, 'decrypt').mockImplementation(() => "wrong-data");
 
-      await expect(testManager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
+      // Mock the crypto verification to fail by returning wrong data
+      jest.spyOn(CryptoWrapper.prototype, "decrypt").mockImplementation(() => "wrong-data");
+
+      await expect(testManager.connect(TEST_PASSWORD)).rejects.toThrow(
+        "Crypto verification failed"
+      );
 
       // Verify crypto is cleaned up
-      await expect(testManager.getKeyPair("any-id")).rejects.toThrow("Connect ssh store manager first");
+      await expect(testManager.getKeyPair("any-id")).rejects.toThrow(
+        "Connect ssh store manager first"
+      );
 
       // Restore the original implementation
       jest.restoreAllMocks();
@@ -136,7 +140,7 @@ describe("SSHStoreManager", () => {
       await manager.connect(TEST_PASSWORD);
 
       // Spy on crypto.destroy
-      const destroySpy = jest.spyOn(CryptoWrapper.prototype, 'destroy');
+      const destroySpy = jest.spyOn(CryptoWrapper.prototype, "destroy");
 
       // Act
       manager.disconnect();
@@ -311,9 +315,9 @@ describe("SSHStoreManager", () => {
       mockStore.keys.mockResolvedValue([
         `backends.${mockBackend.id}`,
         `backends.${otherBackend.id}`,
-        `backends.undefined-backend`
+        `backends.undefined-backend`,
       ]);
-      
+
       // Return undefined for one backend to test filtering
       mockStore.get.mockImplementation(async (key) => {
         if (key === `backends.${mockBackend.id}`) return mockBackend;
