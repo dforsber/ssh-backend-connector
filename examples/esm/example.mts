@@ -1,4 +1,4 @@
-import { SSHStoreManager, SSHManager, Backend } from "../../../ssh-backend-connector";
+import { SSHStoreManager, SSHManager, Backend } from "../../dist/esm/index.js";
 
 async function main(): Promise<void> {
   // Initialize the store manager with a custom path
