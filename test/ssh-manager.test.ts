@@ -3,12 +3,8 @@ import { SSHManager } from "../src/ssh-manager";
 import { SSHStoreManager } from "../src/ssh-store";
 import { Client } from "ssh2";
 import { Backend, SSHKeyPair } from "../src/types";
-import { CryptoConfig } from "../src/crypto-wrapper";
 
-const cwConf: CryptoConfig = {
-  secretKey: "dummy-key",
-  salt: "dummy-salt",
-};
+const pw = "dummyPwLongerAndLongerAndLonger123";
 
 jest.mock("ssh2");
 jest.mock("../src/ssh-store");
@@ -54,7 +50,7 @@ describe("SSHManager", () => {
       return this;
     });
 
-    manager = new SSHManager(cwConf, mockStoreManager);
+    manager = new SSHManager(pw, mockStoreManager);
   });
 
   describe("connect", () => {

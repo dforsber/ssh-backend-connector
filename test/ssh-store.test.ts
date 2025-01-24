@@ -43,7 +43,7 @@ describe("SSHStoreManager", () => {
     test("initializes store and creates new salt if none exists", async () => {
       mockStore.get.mockResolvedValue(null);
       await manager.connect(TEST_PASSWORD);
-      
+
       expect(mockStore.init).toHaveBeenCalled();
       expect(mockStore.get).toHaveBeenCalledWith("crypto.salt");
       expect(mockStore.set).toHaveBeenCalledWith("crypto.salt", expect.any(String));
@@ -56,7 +56,7 @@ describe("SSHStoreManager", () => {
       });
 
       await manager.connect(TEST_PASSWORD);
-      
+
       expect(mockStore.init).toHaveBeenCalled();
       expect(mockStore.get).toHaveBeenCalledWith("crypto.salt");
       expect(mockStore.set).not.toHaveBeenCalledWith("crypto.salt", expect.any(String));
@@ -92,10 +92,10 @@ describe("SSHStoreManager", () => {
     test("getKeyPair retrieves and decrypts key pair", async () => {
       // First save the key pair
       await manager.saveKeyPair(mockKeyPair);
-      
+
       // Capture the encrypted data
       const encryptedData = (mockStore.set as jest.Mock).mock.calls[0][1];
-      
+
       // Setup mock to return the encrypted data
       mockStore.get.mockImplementation(async (key) => {
         if (key === "crypto.salt") return TEST_SALT;
@@ -114,26 +114,33 @@ describe("SSHStoreManager", () => {
 
     test("throws error when trying to save key pair without connecting first", async () => {
       manager = new SSHStoreManager();
-      await expect(manager.saveKeyPair(mockKeyPair)).rejects.toThrow("Connect ssh store manager first");
+      await expect(manager.saveKeyPair(mockKeyPair)).rejects.toThrow(
+        "Connect ssh store manager first"
+      );
     });
 
     test("throws error when trying to get key pair without connecting first", async () => {
       manager = new SSHStoreManager();
-      await expect(manager.getKeyPair(mockKeyPair.id)).rejects.toThrow("Connect ssh store manager first");
+      await expect(manager.getKeyPair(mockKeyPair.id)).rejects.toThrow(
+        "Connect ssh store manager first"
+      );
     });
 
     test("getAllKeyPairs returns all key pairs", async () => {
       const otherKeyPair = { ...mockKeyPair, id: "key2" };
-      
+
       await manager.saveKeyPair(mockKeyPair);
       await manager.saveKeyPair(otherKeyPair);
 
-      mockStore.keys.mockResolvedValue([`keypairs.${mockKeyPair.id}`, `keypairs.${otherKeyPair.id}`]);
-      
+      mockStore.keys.mockResolvedValue([
+        `keypairs.${mockKeyPair.id}`,
+        `keypairs.${otherKeyPair.id}`,
+      ]);
+
       // Store the encrypted data from the saveKeyPair calls
       const encryptedPairs = (mockStore.set as jest.Mock).mock.calls
-        .filter(call => call[0].startsWith('keypairs.'))
-        .map(call => call[1]);
+        .filter((call) => call[0].startsWith("keypairs."))
+        .map((call) => call[1]);
 
       // Update mock to return encrypted data
       mockStore.get.mockImplementation(async (key) => {
@@ -191,10 +198,11 @@ describe("SSHStoreManager", () => {
         keyPairId: "key2",
       };
 
-      mockStore.keys.mockResolvedValue([`backends.${mockBackend.id}`, `backends.${otherBackend.id}`]);
-      mockStore.get
-        .mockResolvedValueOnce(mockBackend)
-        .mockResolvedValueOnce(otherBackend);
+      mockStore.keys.mockResolvedValue([
+        `backends.${mockBackend.id}`,
+        `backends.${otherBackend.id}`,
+      ]);
+      mockStore.get.mockResolvedValueOnce(mockBackend).mockResolvedValueOnce(otherBackend);
 
       const results = await manager.getAllBackends();
       expect(results).toHaveLength(2);

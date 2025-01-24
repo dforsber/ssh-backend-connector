@@ -1,6 +1,5 @@
 import { Client, ClientChannel } from "ssh2";
 import { SSHStoreManager } from "./ssh-store";
-import { CryptoConfig } from "./crypto-wrapper";
 
 export interface TunnelConfig {
   remotePort: number;
@@ -12,8 +11,8 @@ export class SSHManager {
   private store: SSHStoreManager;
   private connections: Map<string, Client>;
 
-  constructor(cryptoConfig: CryptoConfig, store?: SSHStoreManager) {
-    this.store = store || new SSHStoreManager(cryptoConfig);
+  constructor(password: string, store?: SSHStoreManager) {
+    this.store = store || new SSHStoreManager(password);
     this.connections = new Map();
   }
 

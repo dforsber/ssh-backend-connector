@@ -1,19 +1,25 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 
-export interface CryptoConfig {
-  secretKey: string;
-  salt: string;
-}
-
 export class CryptoWrapper {
   private key: Buffer;
   private readonly algorithm = "aes-256-gcm";
+  private salt: string;
 
-  constructor(props: CryptoConfig) {
-    this.key = scryptSync(props.secretKey, props.salt, 32);
+  constructor(password: string, existingSalt?: string | null) {
+    this.salt = existingSalt || randomBytes(16).toString("hex");
+    this.key = scryptSync(password, this.salt, 32, {
+      N: 16384, // scrypt parameters must be power of 2
+      r: 8,
+      p: 1,
+      maxmem: 32 * 1024 * 1024, // 32MB
+    });
   }
 
-  encrypt(text: string): string {
+  public getSalt(): string {
+    return this.salt;
+  }
+
+  public encrypt(text: string): string {
     const iv = randomBytes(16);
     const cipher = createCipheriv(this.algorithm, this.key, iv);
     const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
@@ -22,7 +28,7 @@ export class CryptoWrapper {
     return `${iv.toString("hex")}:${encrypted.toString("hex")}:${tag.toString("hex")}`;
   }
 
-  decrypt(encryptedData: string): string {
+  public decrypt(encryptedData: string): string {
     const [ivHex, encryptedHex, tagHex] = encryptedData.split(":");
     const iv = Buffer.from(ivHex, "hex");
     const encrypted = Buffer.from(encryptedHex, "hex");
