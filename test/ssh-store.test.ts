@@ -102,6 +102,22 @@ describe("SSHStoreManager", () => {
       });
 
       await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
+    });
+
+    test("throws when crypto verification data mismatch", async () => {
+      // Mock get to return a valid salt but tamper with crypto to cause verification mismatch
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return TEST_SALT;
+        return null;
+      });
+
+      // Monkey patch CryptoWrapper to simulate decryption mismatch
+      const originalDecrypt = manager["crypto"]?.decrypt.bind(manager["crypto"]);
+      manager["crypto"]!.decrypt = jest.fn().mockImplementation((data: string) => {
+        return data === "test" ? "wrong-data" : originalDecrypt!(data);
+      });
+
+      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
 
       // Verify crypto is cleaned up
       expect(await manager.getKeyPair("any-id").catch((e) => e.message)).toBe(
