@@ -9,9 +9,9 @@ export class JSONStore {
 
   constructor(filePath: string) {
     // Prevent path traversal
-    const normalizedPath = path.normalize(filePath);
-    if (normalizedPath.includes('..')) {
-      throw new Error('Invalid file path');
+    const normalizedPath = normalize(filePath);
+    if (normalizedPath.includes("..")) {
+      throw new Error("Invalid file path");
     }
     this.filePath = normalizedPath;
     this.data = {};
@@ -40,7 +40,7 @@ export class JSONStore {
       // Write to temp file first
       await writeFile(tmpPath, JSON.stringify(this.data, null, 2), {
         mode: 0o600, // Secure file permissions
-        flag: 'wx' // Fail if temp file exists
+        flag: "wx", // Fail if temp file exists
       });
       // Atomic rename
       await rename(tmpPath, this.filePath);
@@ -48,6 +48,7 @@ export class JSONStore {
       // Clean up temp file if it exists
       try {
         await unlink(tmpPath);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         // Ignore error if temp file doesn't exist
       }
