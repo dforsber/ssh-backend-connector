@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 
 export class CryptoWrapper {
-  private key: Buffer;
+  private key: Buffer | undefined;
   private readonly algorithm = "aes-256-gcm";
   private salt: string;
 
