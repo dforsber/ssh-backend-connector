@@ -102,12 +102,25 @@ describe("SSHStoreManager", () => {
     });
 
     test("cleans up on general error", async () => {
-      mockStore.get.mockRejectedValue(new Error("Store error"));
-      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Store error");
+      // Mock crypto verification to fail
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return TEST_SALT;
+        return null;
+      });
 
-      // Verify store is in clean state by checking it's not connected
-      const result = await manager.getKeyPair("any-id").catch((e) => e.message);
-      expect(result).toBe("Connect ssh store manager first");
+      // Mock set to simulate crypto test failure 
+      mockStore.set.mockImplementation(async (key, value) => {
+        if (key === "test-crypto-verification") {
+          throw new Error("Crypto verification failed");
+        }
+      });
+
+      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
+
+      // Verify crypto is cleaned up
+      expect(await manager.getKeyPair("any-id").catch((e) => e.message)).toBe(
+        "Connect ssh store manager first"
+      );
     });
   });
 
