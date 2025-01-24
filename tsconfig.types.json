@@ -3,9 +3,9 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "outDir": "./dist/types",
+    "outDir": "./dist/esm",
     "emitDeclarationOnly": true,
-    "declarationDir": "./dist/types"
+    "declarationDir": "./dist/esm"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test"]
