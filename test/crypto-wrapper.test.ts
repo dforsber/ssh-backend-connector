@@ -20,23 +20,27 @@ describe("CryptoWrapper", () => {
 
   describe("password complexity validation", () => {
     test("throws when password lacks uppercase letters", () => {
-      expect(() => new CryptoWrapper("test-password-12+"))
-        .toThrow("Password must contain uppercase letters");
+      expect(() => new CryptoWrapper("test-password-12+")).toThrow(
+        "Password must contain uppercase letters"
+      );
     });
 
     test("throws when password lacks lowercase letters", () => {
-      expect(() => new CryptoWrapper("TEST-PASSWORD-12+"))
-        .toThrow("Password must contain lowercase letters");
+      expect(() => new CryptoWrapper("TEST-PASSWORD-12+")).toThrow(
+        "Password must contain lowercase letters"
+      );
     });
 
     test("throws when password lacks numbers", () => {
-      expect(() => new CryptoWrapper("Test-Password-Plus+"))
-        .toThrow("Password must contain numbers");
+      expect(() => new CryptoWrapper("Test-Password-Plus+")).toThrow(
+        "Password must contain numbers"
+      );
     });
 
     test("throws when password lacks special characters", () => {
-      expect(() => new CryptoWrapper("TestPassword123"))
-        .toThrow("Password must contain special characters");
+      expect(() => new CryptoWrapper("TestPassword123")).toThrow(
+        "Password must contain special characters"
+      );
     });
 
     test("accepts password with all required character types", () => {

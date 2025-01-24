@@ -98,11 +98,11 @@ describe("SSHManager", () => {
     test("resets attempt count after reset time", async () => {
       const backendId = "test-backend";
       const oldTime = Date.now() - 400000; // Older than attemptResetTimeMs (300000)
-      
+
       // Set up initial attempts
       manager["connectionAttempts"].set(backendId, {
         count: 3,
-        lastAttempt: oldTime
+        lastAttempt: oldTime,
       });
 
       mockStoreManager.getBackend.mockResolvedValue(mockBackend);
@@ -120,11 +120,11 @@ describe("SSHManager", () => {
     test("throws error when max attempts exceeded within reset time", async () => {
       const backendId = "test-backend";
       const recentTime = Date.now() - 1000; // Recent attempt
-      
+
       // Set up max attempts
       manager["connectionAttempts"].set(backendId, {
         count: manager["maxConnectionAttempts"],
-        lastAttempt: recentTime
+        lastAttempt: recentTime,
       });
 
       mockStoreManager.getBackend.mockResolvedValue(mockBackend);
@@ -139,11 +139,11 @@ describe("SSHManager", () => {
     test("increments attempt count within reset time", async () => {
       const backendId = "test-backend";
       const recentTime = Date.now() - 1000; // Recent attempt
-      
+
       // Set up initial attempts
       manager["connectionAttempts"].set(backendId, {
         count: 1,
-        lastAttempt: recentTime
+        lastAttempt: recentTime,
       });
 
       mockStoreManager.getBackend.mockResolvedValue(mockBackend);

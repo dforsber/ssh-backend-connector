@@ -16,7 +16,7 @@ export class CryptoWrapper {
     if (!password || password.length < 12) {
       throw new Error("Password must be at least 12 characters long");
     }
-    
+
     this.validatePasswordComplexity(password);
 
     // Validate salt length if provided (32 chars in hex = 16 bytes)

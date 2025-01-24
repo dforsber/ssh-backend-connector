@@ -9,7 +9,7 @@ jest.mock("fs/promises", () => ({
   mkdir: jest.fn(),
   rename: jest.fn(),
   unlink: jest.fn(),
-  stat: jest.fn().mockResolvedValue({ mode: 0o600 }) // Mock stat to return correct permissions
+  stat: jest.fn().mockResolvedValue({ mode: 0o600 }), // Mock stat to return correct permissions
 }));
 jest.mock("fs", () => ({
   existsSync: jest.fn(),
@@ -56,7 +56,9 @@ describe("JSONStore", () => {
     test("throws error when file permissions are insecure", async () => {
       (existsSync as jest.Mock).mockReturnValue(true);
       (stat as jest.Mock).mockResolvedValue({ mode: 0o644 }); // Wrong permissions
-      await expect(store.init()).rejects.toThrow("Insecure file permissions detected - expected 0600");
+      await expect(store.init()).rejects.toThrow(
+        "Insecure file permissions detected - expected 0600"
+      );
     });
 
     test("accepts file with correct permissions", async () => {
@@ -93,6 +95,7 @@ describe("JSONStore", () => {
 
     test("loads existing store file", async () => {
       (existsSync as jest.Mock).mockReturnValue(true);
+      (stat as jest.Mock).mockResolvedValue({ mode: 0o600 }); // Correct permissions
       (readFile as jest.Mock).mockResolvedValue('{"test": "value"}');
       await store.init();
       expect(readFile).toHaveBeenCalledWith(testPath, "utf-8");
@@ -101,13 +104,13 @@ describe("JSONStore", () => {
     test("handles JSON parsing error", async () => {
       // Mock existsSync to return true (file exists)
       (existsSync as jest.Mock).mockReturnValue(true);
-      
+
       // Mock stat to return valid permissions
       (stat as jest.Mock).mockResolvedValue({ mode: 0o600 });
-      
+
       // Mock readFile to return invalid JSON
       (readFile as jest.Mock).mockResolvedValue("invalid json");
-      
+
       await expect(store.init()).rejects.toThrow(SyntaxError);
 
       // Test with corrupted JSON that might parse but is not an object

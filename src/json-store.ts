@@ -43,6 +43,7 @@ export class JSONStore {
   private async verifyFilePermissions(filepath: string): Promise<void> {
     try {
       const stats = await stat(filepath);
+      if (!stats) throw new Error("File read error");
       if ((stats.mode & 0o777) !== 0o600) {
         throw new Error("Insecure file permissions detected - expected 0600");
       }
@@ -53,11 +54,9 @@ export class JSONStore {
         if (error.message.includes("Insecure file permissions")) {
           throw error;
         }
-        // Propagate the original error
-        throw error;
       }
-      // Only non-Error objects get wrapped
-      throw new Error("File read error");
+      // Propagate the original error
+      throw error;
     }
   }
 
