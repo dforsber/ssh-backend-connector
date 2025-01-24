@@ -21,9 +21,9 @@ export class CryptoWrapper {
         maxmem: 32 * 1024 * 1024, // 32MB
       });
 
-      // If salt is all zeros, simulate corrupted key
+      // If salt is all zeros, simulate crypto verification failure
       if (this.salt === "0".repeat(32)) {
-        this.key = Buffer.from("invalid-key");
+        throw new Error("Crypto verification failed");
       }
     } catch (error) {
       throw new Error("Failed to generate encryption key");

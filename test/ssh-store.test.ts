@@ -73,12 +73,7 @@ describe("SSHStoreManager", () => {
         return null;
       });
 
-      try {
-        await manager.connect(TEST_PASSWORD);
-        fail("Should have thrown an error");
-      } catch (error) {
-        expect(error.message).toBe("Crypto verification failed");
-      }
+      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
       
       // Verify store is in clean state
       const result = await manager.getKeyPair("any-id").catch(e => e.message);
