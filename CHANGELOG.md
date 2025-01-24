@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.14](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.13...v0.5.14) (2025-01-24)
+
+
+### Features
+
+* Add configurable SSH connection timeout and max concurrent connections ([4a8f304](https://github.com/dforsber/ssh-backend-connector/commit/4a8f304b81bfdd7213aa84d30064d9a002d8468c))
+* Add file size limit to JSONStore with 200MB default ([8ae6771](https://github.com/dforsber/ssh-backend-connector/commit/8ae6771093a088f30bae52c542c86613e115c11b))
+* Add password length limit and improve scrypt key derivation parameters ([2d7208e](https://github.com/dforsber/ssh-backend-connector/commit/2d7208e01181468aff050b030f60ec1ff54f161f))
+* Enhance security with file permissions, password complexity, and rate limiting ([54ac952](https://github.com/dforsber/ssh-backend-connector/commit/54ac952673fd4dded5ef0a19faf4738514ff3095))
+
+
+### Bug Fixes
+
+* Adjust scrypt parameters to valid ranges for better compatibility ([de54be0](https://github.com/dforsber/ssh-backend-connector/commit/de54be0a122c8f48b849fa647d3b7398f17021c7))
+* Handle stat() errors in verifyFilePermissions method ([c002423](https://github.com/dforsber/ssh-backend-connector/commit/c0024237aeccab79d646988edca00e4d9698cc4e))
+* Improve error handling for file permission verification ([1446261](https://github.com/dforsber/ssh-backend-connector/commit/144626127d26e091baf20feeb4269573c0206340))
+* Improve error handling in file permissions verification ([96fe224](https://github.com/dforsber/ssh-backend-connector/commit/96fe224cb649fb5e9c126d0ed9988bbbddc3edb8))
+* Improve error handling in verifyFilePermissions method ([b1959f5](https://github.com/dforsber/ssh-backend-connector/commit/b1959f5beed37459b7a7b11d00c7cbac4adcd3b8))
+* Propagate original errors in file permission verification ([e65b86f](https://github.com/dforsber/ssh-backend-connector/commit/e65b86f470fb9c812e231cd6d55beb036176baeb))
+* Resolve TypeScript spread type error in json-store test ([1286638](https://github.com/dforsber/ssh-backend-connector/commit/12866382f19d2bf964c010839d7764c7779fe6fc))
+* Simplify file permissions error handling to match test expectations ([7b60545](https://github.com/dforsber/ssh-backend-connector/commit/7b6054595579dc1d44080277699ea94388e40241))
+* Simplify file permissions verification error handling ([3beb545](https://github.com/dforsber/ssh-backend-connector/commit/3beb5457c928e4124742f8a17541cfcf3e7bcd85))
+* Validate file size before setting data in JSONStore ([9cb1308](https://github.com/dforsber/ssh-backend-connector/commit/9cb1308551f7348f08c2b8b6204010a75109809f))
+
 ### [0.5.13](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.12...v0.5.13) (2025-01-24)
 
 

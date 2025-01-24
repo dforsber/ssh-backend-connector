@@ -16,4 +16,8 @@ export interface Backend {
     username: string;
     keyPairId: string;
 }
+export interface SSHManagerConfig {
+    connectionTimeout?: number;
+    maxConcurrentConnections?: number;
+}
 //# sourceMappingURL=types.d.ts.map

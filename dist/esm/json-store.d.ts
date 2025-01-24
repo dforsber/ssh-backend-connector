@@ -1,8 +1,11 @@
 export declare class JSONStore {
     private data;
     private filePath;
-    constructor(filePath: string);
+    private readonly maxFileSizeBytes;
+    private static readonly DEFAULT_MAX_FILE_SIZE;
+    constructor(filePath: string, maxFileSizeBytes?: number);
     init(): Promise<void>;
+    private verifyFilePermissions;
     private loadStore;
     private saveStore;
     get<T>(key: string): Promise<T | null>;

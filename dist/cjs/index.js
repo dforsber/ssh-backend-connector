@@ -29,18 +29,55 @@ var import_ssh2 = require("ssh2");
 var SSHManager = class {
   store;
   connections;
-  constructor(store) {
+  maxConnectionAttempts = 3;
+  attemptResetTimeMs = 3e5;
+  // 5 minutes
+  connectionTimeout;
+  maxConcurrentConnections;
+  connectionAttempts;
+  constructor(store, config) {
     this.store = store;
     this.connections = /* @__PURE__ */ new Map();
+    this.connectionAttempts = /* @__PURE__ */ new Map();
+    this.connectionTimeout = config?.connectionTimeout ?? 3e4;
+    this.maxConcurrentConnections = config?.maxConcurrentConnections ?? 10;
+  }
+  checkRateLimit(backendId) {
+    const now = Date.now();
+    const attempts = this.connectionAttempts.get(backendId);
+    if (attempts) {
+      if (now - attempts.lastAttempt > this.attemptResetTimeMs) {
+        this.connectionAttempts.set(backendId, { count: 1, lastAttempt: now });
+        return;
+      }
+      if (attempts.count >= this.maxConnectionAttempts) {
+        throw new Error("Too many connection attempts. Please try again later.");
+      }
+      this.connectionAttempts.set(backendId, {
+        count: attempts.count + 1,
+        lastAttempt: now
+      });
+    } else {
+      this.connectionAttempts.set(backendId, { count: 1, lastAttempt: now });
+    }
   }
   async connect(backendId) {
+    this.checkRateLimit(backendId);
+    if (this.connections.size >= this.maxConcurrentConnections) {
+      throw new Error(`Maximum concurrent connections (${this.maxConcurrentConnections}) reached`);
+    }
     const backend = await this.store.getBackend(backendId);
     if (!backend) throw new Error("Backend not found");
     const keyPair = await this.store.getKeyPair(backend.keyPairId);
     if (!keyPair) throw new Error("SSH key pair not found");
     const conn = new import_ssh2.Client();
     return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        conn.end();
+        reject(new Error(`Connection timeout after ${this.connectionTimeout}ms`));
+      }, this.connectionTimeout);
       conn.on("ready", () => {
+        clearTimeout(timeoutId);
         this.connections.set(backendId, conn);
         resolve(conn);
       }).on("error", (err) => {
@@ -89,10 +126,18 @@ var CryptoWrapper = class {
   key;
   algorithm = "aes-256-gcm";
   salt;
+  validatePasswordComplexity(password) {
+    if (password.length > 128) throw new Error("Password must not exceed 128 characters");
+    if (!/[A-Z]/.test(password)) throw new Error("Password must contain uppercase letters");
+    if (!/[a-z]/.test(password)) throw new Error("Password must contain lowercase letters");
+    if (!/[0-9]/.test(password)) throw new Error("Password must contain numbers");
+    if (!/[^A-Za-z0-9]/.test(password)) throw new Error("Password must contain special characters");
+  }
   constructor(password, existingSalt) {
     if (!password || password.length < 12) {
       throw new Error("Password must be at least 12 characters long");
     }
+    this.validatePasswordComplexity(password);
     if (existingSalt && existingSalt.length !== 32) {
       throw new Error("Invalid salt length");
     }
@@ -100,11 +145,13 @@ var CryptoWrapper = class {
     try {
       this.key = (0, import_node_crypto.scryptSync)(password, this.salt, 32, {
         N: 16384,
-        // scrypt parameters must be power of 2
+        // CPU/memory cost parameter (must be power of 2)
         r: 8,
+        // Block size parameter
         p: 1,
+        // Parallelization parameter
         maxmem: 32 * 1024 * 1024
-        // 32MB
+        // 32MB memory limit
       });
       if (this.salt === "0".repeat(32)) {
         throw new Error("Crypto verification failed");
@@ -113,7 +160,7 @@ var CryptoWrapper = class {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error("Failed to generate encryption key");
+      throw new Error(`Failed to generate encryption key: ${error}`);
     }
     password = (0, import_node_crypto.randomBytes)(password.length).toString("hex");
   }
@@ -152,10 +199,14 @@ var CryptoWrapper = class {
 var import_promises = require("fs/promises");
 var import_fs = require("fs");
 var import_path = require("path");
-var JSONStore = class {
+var JSONStore = class _JSONStore {
   data;
   filePath;
-  constructor(filePath) {
+  maxFileSizeBytes;
+  static DEFAULT_MAX_FILE_SIZE = 200 * 1024 * 1024;
+  // 200MB
+  constructor(filePath, maxFileSizeBytes = _JSONStore.DEFAULT_MAX_FILE_SIZE) {
+    this.maxFileSizeBytes = maxFileSizeBytes;
     try {
       const normalizedPath = (0, import_path.normalize)(filePath);
       if (filePath.includes("..") || normalizedPath.includes("..")) {
@@ -180,6 +231,22 @@ var JSONStore = class {
       throw error;
     }
   }
+  async verifyFilePermissions(filepath) {
+    try {
+      const stats = await (0, import_promises.stat)(filepath);
+      if (!stats) throw new Error("File read error");
+      if ((stats.mode & 511) !== 384) {
+        throw new Error("Insecure file permissions detected - expected 0600");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes("Insecure file permissions")) {
+          throw error;
+        }
+      }
+      throw error;
+    }
+  }
   async loadStore() {
     if (!(0, import_fs.existsSync)(this.filePath)) {
       const dir = (0, import_path.dirname)(this.filePath);
@@ -189,6 +256,7 @@ var JSONStore = class {
       await (0, import_promises.writeFile)(this.filePath, "{}");
       return {};
     }
+    await this.verifyFilePermissions(this.filePath);
     const content = await (0, import_promises.readFile)(this.filePath, "utf-8");
     const parsed = JSON.parse(content);
     if (typeof parsed !== "object" || parsed === null) {
@@ -198,8 +266,9 @@ var JSONStore = class {
   }
   async saveStore() {
     const tmpPath = `${this.filePath}.tmp`;
+    const jsonData = JSON.stringify(this.data, null, 2);
     try {
-      await (0, import_promises.writeFile)(tmpPath, JSON.stringify(this.data, null, 2), {
+      await (0, import_promises.writeFile)(tmpPath, jsonData, {
         mode: 384,
         // Secure file permissions
         flag: "wx"
@@ -217,6 +286,14 @@ var JSONStore = class {
     return this.data[key] || null;
   }
   async set(key, value) {
+    const newData = { ...this.data, [key]: value };
+    const jsonData = JSON.stringify(newData, null, 2);
+    const byteSize = Buffer.byteLength(jsonData, "utf8");
+    if (byteSize > this.maxFileSizeBytes) {
+      throw new Error(
+        `File size (${byteSize} bytes) exceeds maximum allowed size (${this.maxFileSizeBytes} bytes)`
+      );
+    }
     this.data[key] = value;
     await this.saveStore();
   }
