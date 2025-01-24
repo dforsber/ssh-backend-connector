@@ -9,7 +9,7 @@ describe("SSHStoreManager", () => {
   let manager: SSHStoreManager;
   let mockStore: jest.Mocked<JSONStore>;
   const TEST_PASSWORD = "test-password-longer-than-32-chars-123456";
-  const TEST_SALT = "0123456789abcdef";
+  const TEST_SALT = "0123456789abcdef0123456789abcdef";
 
   const mockKeyPair: SSHKeyPair = {
     id: "key1",
