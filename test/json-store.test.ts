@@ -34,6 +34,15 @@ describe("JSONStore", () => {
       expect(() => new JSONStore("test/sub-dir/store.json")).not.toThrow();
       expect(() => new JSONStore("test/sub_dir/store.json")).not.toThrow();
     });
+
+    test("handles non-Error constructor failures", () => {
+      // Mock normalize to throw a non-Error object
+      jest.spyOn(require('path'), 'normalize').mockImplementationOnce(() => {
+        throw "Not an error object";
+      });
+      
+      expect(() => new JSONStore("test/store.json")).toThrow("Invalid file path");
+    });
   });
 
   describe("init", () => {
