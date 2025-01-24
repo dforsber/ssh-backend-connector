@@ -31,8 +31,8 @@ export class CryptoWrapper {
     try {
       this.key = scryptSync(password, this.salt, 32, {
         N: 32768, // Increased from 16384 (still power of 2)
-        r: 16,    // Increased from 8
-        p: 2,     // Increased from 1
+        r: 16, // Increased from 8
+        p: 2, // Increased from 1
         maxmem: 64 * 1024 * 1024, // Increased to 64MB
       });
 
@@ -44,7 +44,7 @@ export class CryptoWrapper {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error("Failed to generate encryption key");
+      throw new Error(`Failed to generate encryption key: ${error}`);
     }
 
     // Overwrite password in memory
