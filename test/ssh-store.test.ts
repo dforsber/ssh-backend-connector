@@ -130,15 +130,16 @@ describe("SSHStoreManager", () => {
 
       mockStore.keys.mockResolvedValue([`keypairs.${mockKeyPair.id}`, `keypairs.${otherKeyPair.id}`]);
       
-      const savedPairs = await Promise.all([
-        manager.getKeyPair(mockKeyPair.id),
-        manager.getKeyPair(otherKeyPair.id),
-      ]);
+      // Store the encrypted data from the saveKeyPair calls
+      const encryptedPairs = (mockStore.set as jest.Mock).mock.calls
+        .filter(call => call[0].startsWith('keypairs.'))
+        .map(call => call[1]);
 
+      // Update mock to return encrypted data
       mockStore.get.mockImplementation(async (key) => {
         if (key === "crypto.salt") return TEST_SALT;
-        if (key === `keypairs.${mockKeyPair.id}`) return savedPairs[0];
-        if (key === `keypairs.${otherKeyPair.id}`) return savedPairs[1];
+        if (key === `keypairs.${mockKeyPair.id}`) return encryptedPairs[0];
+        if (key === `keypairs.${otherKeyPair.id}`) return encryptedPairs[1];
         return null;
       });
 
