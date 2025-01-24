@@ -12,13 +12,13 @@ export class SSHStoreManager {
 
   public async connect(password: string): Promise<void> {
     if (!password) throw new Error("Password is required");
-    
+
     try {
       await this.store.init();
       const salt = await this.store.get<string>("crypto.salt");
       this.crypto = new CryptoWrapper(password, salt);
       if (!salt) await this.store.set("crypto.salt", this.crypto.getSalt());
-      
+
       // Test crypto is working by trying to encrypt/decrypt test data
       const testData = "test";
       const encrypted = this.crypto.encrypt(testData);
