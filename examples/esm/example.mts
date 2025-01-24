@@ -7,17 +7,17 @@ async function main(): Promise<void> {
     const storeManager = new SSHStoreManager("./ssh-store.json");
 
     // Connect with a password
-    await storeManager.connect("your-secure-password");
+    await storeManager.connect("your-Secure-password_888");
 
-  // Example backend configuration
-  const backend: Backend = {
-    id: "example-server",
-    name: "Example Server",
-    host: "example.com",
-    port: 22,
-    username: "user",
-    keyPairId: "key1",
-  };
+    // Example backend configuration
+    const backend: Backend = {
+      id: "example-server",
+      name: "Example Server",
+      host: "example.com",
+      port: 22,
+      username: "user",
+      keyPairId: "key1",
+    };
 
     // Create and save an SSH key pair first
     // Import the test keys

@@ -3,7 +3,7 @@ node_modules/
 coverage/
 .aider*
 ssh-store.json
-test/fixtures/keys/
+examples/test-keys/
 *.log
 .DS_Store
 .env

@@ -5,7 +5,7 @@ async function main() {
   const storeManager = new SSHStoreManager("./ssh-store.json");
 
   // Connect with a password
-  await storeManager.connect("your-secure-password");
+  await storeManager.connect("your-SECURE-password-123123");
 
   // Create an SSH manager instance
   const sshManager = new SSHManager(storeManager);
