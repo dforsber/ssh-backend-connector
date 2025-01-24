@@ -1,5 +1,5 @@
 // store.ts
-import { readFile, writeFile, mkdir, rename, unlink } from "fs/promises";
+import { readFile, writeFile, mkdir, rename, unlink, stat } from "fs/promises";
 import { existsSync } from "fs";
 import { dirname, normalize } from "path";
 
@@ -40,6 +40,13 @@ export class JSONStore {
     }
   }
 
+  private async verifyFilePermissions(filepath: string): Promise<void> {
+    const stats = await stat(filepath);
+    if ((stats.mode & 0o777) !== 0o600) {
+      throw new Error("Insecure file permissions detected - expected 0600");
+    }
+  }
+
   private async loadStore(): Promise<Record<string, unknown>> {
     if (!existsSync(this.filePath)) {
       const dir = dirname(this.filePath);
@@ -49,6 +56,7 @@ export class JSONStore {
       await writeFile(this.filePath, "{}");
       return {};
     }
+    await this.verifyFilePermissions(this.filePath);
     const content = await readFile(this.filePath, "utf-8");
     const parsed = JSON.parse(content);
     if (typeof parsed !== "object" || parsed === null) {

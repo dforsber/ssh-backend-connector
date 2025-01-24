@@ -1,3 +1,10 @@
+/**
+ * WARNING: These are test keys only!
+ * DO NOT use these keys in production environments.
+ * Generate your own secure keys for production use.
+ * These keys are for testing and example purposes only.
+ */
+
 export const testKeys = {
   privateKey: `-----BEGIN OPENSSH PRIVATE KEY-----
 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABFwAAAAdzc2gtcn

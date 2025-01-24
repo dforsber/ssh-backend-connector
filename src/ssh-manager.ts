@@ -10,13 +10,42 @@ export interface TunnelConfig {
 export class SSHManager {
   private store: SSHStoreManager;
   private connections: Map<string, Client>;
+  private readonly maxConnectionAttempts = 3;
+  private readonly attemptResetTimeMs = 300000; // 5 minutes
+  private connectionAttempts: Map<string, { count: number; lastAttempt: number }>;
 
   constructor(store: SSHStoreManager) {
     this.store = store;
     this.connections = new Map();
+    this.connectionAttempts = new Map();
+  }
+
+  private checkRateLimit(backendId: string): void {
+    const now = Date.now();
+    const attempts = this.connectionAttempts.get(backendId);
+
+    if (attempts) {
+      // Reset if enough time has passed
+      if (now - attempts.lastAttempt > this.attemptResetTimeMs) {
+        this.connectionAttempts.set(backendId, { count: 1, lastAttempt: now });
+        return;
+      }
+
+      if (attempts.count >= this.maxConnectionAttempts) {
+        throw new Error("Too many connection attempts. Please try again later.");
+      }
+
+      this.connectionAttempts.set(backendId, {
+        count: attempts.count + 1,
+        lastAttempt: now,
+      });
+    } else {
+      this.connectionAttempts.set(backendId, { count: 1, lastAttempt: now });
+    }
   }
 
   async connect(backendId: string): Promise<Client> {
+    this.checkRateLimit(backendId);
     const backend = await this.store.getBackend(backendId);
     if (!backend) throw new Error("Backend not found");
 

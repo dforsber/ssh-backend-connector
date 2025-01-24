@@ -5,10 +5,19 @@ export class CryptoWrapper {
   private readonly algorithm = "aes-256-gcm";
   private salt: string;
 
+  private validatePasswordComplexity(password: string): void {
+    if (!/[A-Z]/.test(password)) throw new Error("Password must contain uppercase letters");
+    if (!/[a-z]/.test(password)) throw new Error("Password must contain lowercase letters");
+    if (!/[0-9]/.test(password)) throw new Error("Password must contain numbers");
+    if (!/[^A-Za-z0-9]/.test(password)) throw new Error("Password must contain special characters");
+  }
+
   constructor(password: string, existingSalt?: string | null) {
     if (!password || password.length < 12) {
       throw new Error("Password must be at least 12 characters long");
     }
+    
+    this.validatePasswordComplexity(password);
 
     // Validate salt length if provided (32 chars in hex = 16 bytes)
     if (existingSalt && existingSalt.length !== 32) {
