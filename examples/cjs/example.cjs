@@ -1,4 +1,4 @@
-const { SSHManager, SSHStoreManager } = require("../../dist/cjs/index.js");
+const { SSHStoreManager } = require("../../dist/cjs/index.js");
 
 async function main() {
   // Initialize the store manager with a custom path
