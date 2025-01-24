@@ -26,7 +26,7 @@ export class CryptoWrapper {
         throw new Error("Crypto verification failed");
       }
     } catch (error) {
-      throw new Error("Failed to generate encryption key");
+      throw error;
     }
 
     // Overwrite password in memory
