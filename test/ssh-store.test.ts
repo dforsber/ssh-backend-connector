@@ -305,5 +305,27 @@ describe("SSHStoreManager", () => {
       const results = await manager.getAllBackends();
       expect(results).toHaveLength(0);
     });
+
+    test("getAllBackends filters out undefined backends", async () => {
+      const otherBackend = { ...mockBackend, id: "other" };
+      mockStore.keys.mockResolvedValue([
+        `backends.${mockBackend.id}`,
+        `backends.${otherBackend.id}`,
+        `backends.undefined-backend`
+      ]);
+      
+      // Return undefined for one backend to test filtering
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === `backends.${mockBackend.id}`) return mockBackend;
+        if (key === `backends.${otherBackend.id}`) return otherBackend;
+        if (key === "backends.undefined-backend") return undefined;
+        return null;
+      });
+
+      const results = await manager.getAllBackends();
+      expect(results).toHaveLength(2);
+      expect(results).toContainEqual(mockBackend);
+      expect(results).toContainEqual(otherBackend);
+    });
   });
 });
