@@ -89,7 +89,6 @@ export class SSHStoreManager {
   }
 
   async getAllKeyPairs(): Promise<SSHKeyPair[]> {
-    if (!this.crypto) throw new Error("Connect ssh store manager first");
     const keys = await this.store.keys();
     const keyPairKeys = keys.filter((k) => k.startsWith("keypairs."));
     const keyPairs = await Promise.all(

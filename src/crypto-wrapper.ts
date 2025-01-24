@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 
 export class CryptoWrapper {
-  private key: Buffer | undefined;
+  private key: Buffer;
   private readonly algorithm = "aes-256-gcm";
   private salt: string;
 
@@ -41,7 +41,8 @@ export class CryptoWrapper {
     if (this.key) {
       // Overwrite the key buffer with random data
       randomBytes(this.key.length).copy(this.key);
-      this.key = undefined;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this as any).key = undefined;
     }
     this.salt = "";
   }

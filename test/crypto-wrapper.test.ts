@@ -27,7 +27,9 @@ describe("CryptoWrapper", () => {
   });
 
   test("throws error for short password", () => {
-    expect(() => new CryptoWrapper("short")).toThrow("Password must be at least 12 characters long");
+    expect(() => new CryptoWrapper("short")).toThrow(
+      "Password must be at least 12 characters long"
+    );
   });
 
   test("throws error for empty password", () => {
@@ -45,14 +47,14 @@ describe("CryptoWrapper", () => {
   test("destroy clears sensitive data", () => {
     const testData = "test-data";
     const encrypted = wrapper.encrypt(testData);
-    
+
     wrapper.destroy();
-    
+
     // Key should be undefined after destroy
     expect(wrapper["key"]).toBeUndefined();
     // Salt should be empty after destroy
     expect(wrapper["salt"]).toBe("");
-    
+
     // Attempting to use the wrapper after destroy should throw
     expect(() => wrapper.encrypt(testData)).toThrow();
     expect(() => wrapper.decrypt(encrypted)).toThrow();
