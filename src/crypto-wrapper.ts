@@ -6,6 +6,7 @@ export class CryptoWrapper {
   private salt: string;
 
   private validatePasswordComplexity(password: string): void {
+    if (password.length > 128) throw new Error("Password must not exceed 128 characters");
     if (!/[A-Z]/.test(password)) throw new Error("Password must contain uppercase letters");
     if (!/[a-z]/.test(password)) throw new Error("Password must contain lowercase letters");
     if (!/[0-9]/.test(password)) throw new Error("Password must contain numbers");
@@ -29,10 +30,10 @@ export class CryptoWrapper {
     // Generate key and immediately clear password from memory
     try {
       this.key = scryptSync(password, this.salt, 32, {
-        N: 16384, // scrypt parameters must be power of 2
-        r: 8,
-        p: 1,
-        maxmem: 32 * 1024 * 1024, // 32MB
+        N: 32768, // Increased from 16384 (still power of 2)
+        r: 16,    // Increased from 8
+        p: 2,     // Increased from 1
+        maxmem: 64 * 1024 * 1024, // Increased to 64MB
       });
 
       // If salt is all zeros, simulate crypto verification failure
