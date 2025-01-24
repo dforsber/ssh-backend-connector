@@ -27,41 +27,37 @@ import { SSHStoreManager, SSHManager } from "ssh-backend-connector";
 const store = new SSHStoreManager();
 await store.connect("your-secure-password"); // At least 12 characters
 
-try {
-  // Store SSH keys (encrypted)
-  await store.saveKeyPair({
-    id: "prod-key",
-    name: "Production Server",
-    privateKey: "-----BEGIN RSA PRIVATE KEY-----...",
-    publicKey: "ssh-rsa AAAA...",
-  });
+// Store SSH keys (encrypted)
+await store.saveKeyPair({
+  id: "prod-key",
+  name: "Production Server",
+  privateKey: "-----BEGIN RSA PRIVATE KEY-----...",
+  publicKey: "ssh-rsa AAAA...",
+});
 
-  // Store backend config
-  await store.saveBackend({
-    id: "prod",
-    name: "Production",
-    host: "192.168.1.100",
-    port: 22,
-    username: "admin",
-    keyPairId: "prod-key",
-  });
+// Store backend config
+await store.saveBackend({
+  id: "prod",
+  name: "Production",
+  host: "192.168.1.100",
+  port: 22,
+  username: "admin",
+  keyPairId: "prod-key",
+});
 
-  // Create SSH manager with the store
-  const ssh = new SSHManager(store);
+// Create SSH manager with the store
+const ssh = new SSHManager(store);
 
-  // Connect and setup tunnel
-  await ssh.connect("prod");
-  await ssh.setupTunnel("prod", {
-    remotePort: 3000,
-    localPort: 8080,
-  });
+// Connect and setup tunnel
+await ssh.connect("prod");
+await ssh.setupTunnel("prod", {
+  remotePort: 3000,
+  localPort: 8080,
+});
 
-  // When done, cleanup
-  ssh.disconnect("prod");
-  store.disconnect(); // Clears sensitive data from memory
-} catch (error) {
-  console.error("Error:", error);
-}
+// When done, cleanup
+ssh.disconnect("prod");
+store.disconnect(); // Clears sensitive data from memory
 ```
 
 ## API
