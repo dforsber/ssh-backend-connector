@@ -78,7 +78,7 @@ describe("CryptoWrapper", () => {
   });
 
   test("throws error for invalid auth tag length in decrypt", () => {
-    const iv = "0123456789abcdef"; // 16 chars = 8 bytes in hex
+    const iv = "0123456789abcdef0123456789abcdef"; // 32 chars = 16 bytes in hex
     const invalidTag = "tooShort";
     const encrypted = `${iv}:encrypted:${invalidTag}`;
     expect(() => wrapper.decrypt(encrypted)).toThrow("Invalid auth tag length");
