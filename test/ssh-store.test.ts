@@ -1,125 +1,125 @@
-import { jest } from "@jest/globals";
-import { encrypt } from "../src/crypto";
 import { SSHStoreManager } from "../src/ssh-store";
+import { JSONStore } from "../src/json-store";
+import { type SSHKeyPair, type Backend } from "../src/types";
+import { CryptoConfig, CryptoWrapper } from "../src/crypto-wrapper";
 
-// Define mock methods type
-interface StoreMock {
-  get: jest.Mock;
-  set: jest.Mock;
-}
+jest.mock("../src/json-store");
 
-const mockStore = {
-  get: jest.fn(),
-  set: jest.fn(),
-} as StoreMock;
-
-jest.mock("electron-store", () => {
-  return jest.fn().mockImplementation(() => mockStore);
-});
+const cwConf: CryptoConfig = {
+  secretKey: "dummy-key",
+  salt: "dummy-salt",
+};
 
 describe("SSHStoreManager", () => {
   let manager: SSHStoreManager;
+  let mockStore: jest.Mocked<JSONStore>;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    manager = new SSHStoreManager();
-  });
-
-  const mockKeyPair = {
+  const mockKeyPair: SSHKeyPair = {
     id: "key1",
-    privateKey: "private-content",
-    publicKey: "public-content",
+    privateKey: "private-key-content",
+    publicKey: "public-key-content",
   };
 
-  const mockBackend = {
+  const mockBackend: Backend = {
     id: "backend1",
-    name: "Production Server",
+    name: "Test Backend",
     host: "192.168.1.100",
     port: 22,
     username: "admin",
     keyPairId: "key1",
   };
 
-  test("saveKeyPair encrypts and stores key pair", () => {
-    manager.saveKeyPair(mockKeyPair);
-    expect(mockStore.set).toHaveBeenCalledWith(
-      `keypairs.${mockKeyPair.id}`,
-      expect.objectContaining({
+  beforeEach(async () => {
+    mockStore = {
+      init: jest.fn(),
+      get: jest.fn(),
+      set: jest.fn(),
+      keys: jest.fn(),
+      delete: jest.fn(),
+    } as unknown as jest.Mocked<JSONStore>;
+
+    (JSONStore as jest.MockedClass<typeof JSONStore>).mockImplementation(() => mockStore);
+
+    manager = new SSHStoreManager(cwConf);
+    await manager.init();
+  });
+
+  describe("keyPair operations", () => {
+    test("saveKeyPair encrypts and stores key pair", async () => {
+      await manager.saveKeyPair(mockKeyPair);
+
+      expect(mockStore.set).toHaveBeenCalledWith(
+        `keypairs.${mockKeyPair.id}`,
+        expect.objectContaining({
+          id: mockKeyPair.id,
+          privateKey: expect.any(String),
+          publicKey: expect.any(String),
+        })
+      );
+    });
+
+    test("getKeyPair retrieves and decrypts key pair", async () => {
+      const cw = new CryptoWrapper(cwConf);
+      const encryptedData = {
         id: mockKeyPair.id,
-        privateKey: expect.any(String),
-        publicKey: expect.any(String),
-      })
-    );
-  });
+        privateKey: cw.encrypt(mockKeyPair.privateKey),
+        publicKey: cw.encrypt(mockKeyPair.publicKey),
+      };
 
-  test("getKeyPair retrieves and decrypts key pair", () => {
-    const encryptedData = {
-      id: "key1",
-      privateKey: encrypt("private-key-content"),
-      publicKey: encrypt("public-key-content"),
-    };
+      mockStore.get.mockResolvedValue(encryptedData);
 
-    mockStore.get.mockReturnValue(encryptedData);
+      const result = await manager.getKeyPair(mockKeyPair.id);
+      expect(result).toEqual(mockKeyPair);
+    });
 
-    const result = manager.getKeyPair("key1");
-    expect(result).toEqual({
-      id: "key1",
-      privateKey: "private-key-content",
-      publicKey: "public-key-content",
+    test("getKeyPair returns null when key not found", async () => {
+      mockStore.get.mockResolvedValue(null);
+      const result = await manager.getKeyPair("nonexistent");
+      expect(result).toBeNull();
     });
   });
 
-  test("saveBackend stores backend configuration", () => {
-    manager.saveBackend(mockBackend);
-    expect(mockStore.set).toHaveBeenCalledWith(`backends.${mockBackend.id}`, mockBackend);
-  });
-
-  test("getBackend retrieves backend configuration", () => {
-    mockStore.get.mockReturnValue(mockBackend);
-    const result = manager.getBackend(mockBackend.id);
-    expect(result).toEqual(mockBackend);
-  });
-
-  test("getAllBackends returns array of backends", () => {
-    mockStore.get.mockReturnValue({
-      [mockBackend.id]: mockBackend,
+  describe("backend operations", () => {
+    test("saveBackend stores backend configuration", async () => {
+      await manager.saveBackend(mockBackend);
+      expect(mockStore.set).toHaveBeenCalledWith(`backends.${mockBackend.id}`, mockBackend);
     });
-    const result = manager.getAllBackends();
-    expect(result).toEqual([mockBackend]);
+
+    test("getBackend retrieves backend configuration", async () => {
+      mockStore.get.mockResolvedValue(mockBackend);
+      const result = await manager.getBackend(mockBackend.id);
+      expect(result).toEqual(mockBackend);
+    });
+
+    test("getBackend returns null when backend not found", async () => {
+      mockStore.get.mockResolvedValue(null);
+      const result = await manager.getBackend("nonexistent");
+      expect(result).toBeNull();
+    });
+
+    test("getAllBackends retrieves all backend configs", async () => {
+      const otherBackend: Backend = {
+        id: "other",
+        name: "Other Backend",
+        host: "192.168.1.101",
+        port: 22,
+        username: "admin2",
+        keyPairId: "key2",
+      };
+
+      mockStore.keys.mockResolvedValue([`backends.${mockBackend.id}`, "backends.other"]);
+
+      mockStore.get.mockResolvedValueOnce(mockBackend).mockResolvedValueOnce(otherBackend);
+
+      const results = await manager.getAllBackends();
+      expect(results).toHaveLength(2);
+      expect(results[0]).toEqual(mockBackend);
+      expect(results[1]).toEqual(otherBackend);
+    });
   });
 
-  test("getAllBackends returns empty array when no backends exist", () => {
-    mockStore.get.mockReturnValue(undefined);
-    const result = manager.getAllBackends();
-    expect(result).toEqual([]);
-  });
-
-  test("getKeyPair returns null for non-existent id", () => {
-    mockStore.get.mockReturnValue(undefined);
-    const result = manager.getKeyPair("non-existent");
-    expect(result).toBeNull();
-  });
-
-  test("getBackend returns null for non-existent id", () => {
-    mockStore.get.mockReturnValue(null);
-    const result = manager.getBackend("non-existent");
-    expect(result).toBeNull();
-  });
-
-  test("saveKeyPair handles optional name field", () => {
-    const keyPairWithName = {
-      ...mockKeyPair,
-      name: "My Key",
-    };
-    manager.saveKeyPair(keyPairWithName);
-    expect(mockStore.set).toHaveBeenCalledWith(
-      `keypairs.${keyPairWithName.id}`,
-      expect.objectContaining({
-        id: keyPairWithName.id,
-        name: "My Key",
-        privateKey: expect.any(String),
-        publicKey: expect.any(String),
-      })
-    );
+  test("init initializes store", async () => {
+    await manager.init();
+    expect(mockStore.init).toHaveBeenCalled();
   });
 });

@@ -1,5 +1,6 @@
 import { Client, ClientChannel } from "ssh2";
-import { SSHStoreManager } from "./ssh-store.js";
+import { SSHStoreManager } from "./ssh-store";
+import { CryptoConfig } from "./crypto-wrapper";
 
 export interface TunnelConfig {
   remotePort: number;
@@ -11,16 +12,16 @@ export class SSHManager {
   private store: SSHStoreManager;
   private connections: Map<string, Client>;
 
-  constructor(store?: SSHStoreManager) {
-    this.store = store || new SSHStoreManager();
+  constructor(cryptoConfig: CryptoConfig, store?: SSHStoreManager) {
+    this.store = store || new SSHStoreManager(cryptoConfig);
     this.connections = new Map();
   }
 
   async connect(backendId: string): Promise<Client> {
-    const backend = this.store.getBackend(backendId);
+    const backend = await this.store.getBackend(backendId);
     if (!backend) throw new Error("Backend not found");
 
-    const keyPair = this.store.getKeyPair(backend.keyPairId);
+    const keyPair = await this.store.getKeyPair(backend.keyPairId);
     if (!keyPair) throw new Error("SSH key pair not found");
 
     const conn = new Client();

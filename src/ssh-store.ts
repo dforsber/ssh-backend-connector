@@ -1,57 +1,52 @@
-import { encrypt, decrypt } from "./crypto.js";
-import { SSHKeyPair, Backend } from "./types.js";
-import * as Store from "electron-store";
+import { SSHKeyPair, Backend } from "./types";
+import { CryptoConfig, CryptoWrapper } from "./crypto-wrapper";
+import { JSONStore } from "./json-store";
 
 export class SSHStoreManager {
-  private store: typeof Store;
+  private store: JSONStore;
+  private crypto: CryptoWrapper;
 
-  constructor() {
-    // @ts-expect-error
-    this.store = new Store({
-      encryptionKey: "your-secret-key",
-      name: "ssh-config",
-      defaults: {
-        keypairs: {},
-        backends: {},
-      },
-    });
+  constructor(cryptoConfig: CryptoConfig, storePath = ".ssh-store/data.json") {
+    this.store = new JSONStore(storePath);
+    this.crypto = new CryptoWrapper(cryptoConfig);
   }
 
-  saveKeyPair(keyPair: SSHKeyPair): void {
+  public async init(): Promise<void> {
+    await this.store.init();
+  }
+
+  async saveKeyPair(keyPair: SSHKeyPair): Promise<void> {
     const encrypted = {
       ...keyPair,
-      privateKey: encrypt(keyPair.privateKey),
-      publicKey: encrypt(keyPair.publicKey),
+      privateKey: this.crypto.encrypt(keyPair.privateKey),
+      publicKey: this.crypto.encrypt(keyPair.publicKey),
     };
-    // @ts-expect-error
-    this.store.set(`keypairs.${keyPair.id}`, encrypted);
+    await this.store.set(`keypairs.${keyPair.id}`, encrypted);
   }
 
-  getKeyPair(id: string): SSHKeyPair | null {
-    // @ts-expect-error
-    const encrypted = this.store.get(`keypairs.${id}`) as SSHKeyPair | undefined;
+  async getKeyPair(id: string): Promise<SSHKeyPair | null> {
+    const encrypted = await this.store.get<SSHKeyPair>(`keypairs.${id}`);
     if (!encrypted) return null;
     return {
       id,
-      name: encrypted.name,
-      privateKey: decrypt(encrypted.privateKey),
-      publicKey: decrypt(encrypted.publicKey),
+      privateKey: this.crypto.decrypt(encrypted.privateKey),
+      publicKey: this.crypto.decrypt(encrypted.publicKey),
     };
   }
 
-  saveBackend(backend: Backend): void {
-    // @ts-expect-error
-    this.store.set(`backends.${backend.id}`, backend);
+  // Update other methods to be async
+  async saveBackend(backend: Backend): Promise<void> {
+    await this.store.set(`backends.${backend.id}`, backend);
   }
 
-  getBackend(id: string): Backend | null {
-    // @ts-expect-error
-    return this.store.get(`backends.${id}`, null);
+  async getBackend(id: string): Promise<Backend | null> {
+    return this.store.get(`backends.${id}`);
   }
 
-  getAllBackends(): Backend[] {
-    // @ts-expect-error
-    const backends = this.store.get("backends");
-    return Object.values(backends || {});
+  async getAllBackends(): Promise<Backend[]> {
+    const keys = await this.store.keys();
+    const backendKeys = keys.filter((k) => k.startsWith("backends."));
+    const backends = await Promise.all(backendKeys.map((k) => this.store.get<Backend>(k)));
+    return backends.filter((b): b is Backend => b !== null && b !== undefined);
   }
 }
