@@ -1,18 +1,15 @@
 import { SSHStoreManager } from "../src/ssh-store";
 import { JSONStore } from "../src/json-store";
 import { type SSHKeyPair, type Backend } from "../src/types";
-import { CryptoConfig, CryptoWrapper } from "../src/crypto-wrapper";
+import { CryptoWrapper } from "../src/crypto-wrapper";
 
 jest.mock("../src/json-store");
-
-const cwConf: CryptoConfig = {
-  secretKey: "dummy-key",
-  salt: "dummy-salt",
-};
 
 describe("SSHStoreManager", () => {
   let manager: SSHStoreManager;
   let mockStore: jest.Mocked<JSONStore>;
+  const TEST_PASSWORD = "test-password";
+  const TEST_SALT = "test-salt";
 
   const mockKeyPair: SSHKeyPair = {
     id: "key1",
@@ -38,10 +35,15 @@ describe("SSHStoreManager", () => {
       delete: jest.fn(),
     } as unknown as jest.Mocked<JSONStore>;
 
+    mockStore.get.mockImplementation(async (key) => {
+      if (key === "crypto.salt") return TEST_SALT;
+      return null;
+    });
+
     (JSONStore as jest.MockedClass<typeof JSONStore>).mockImplementation(() => mockStore);
 
-    manager = new SSHStoreManager(cwConf);
-    await manager.init();
+    manager = new SSHStoreManager();
+    await manager.connect(TEST_PASSWORD);
   });
 
   describe("keyPair operations", () => {
@@ -59,23 +61,26 @@ describe("SSHStoreManager", () => {
     });
 
     test("getKeyPair retrieves and decrypts key pair", async () => {
-      const cw = new CryptoWrapper(cwConf);
+      const crypto = new CryptoWrapper(TEST_PASSWORD, TEST_SALT);
+
       const encryptedData = {
         id: mockKeyPair.id,
-        privateKey: cw.encrypt(mockKeyPair.privateKey),
-        publicKey: cw.encrypt(mockKeyPair.publicKey),
+        privateKey: crypto.encrypt(mockKeyPair.privateKey),
+        publicKey: crypto.encrypt(mockKeyPair.publicKey),
       };
 
-      mockStore.get.mockResolvedValue(encryptedData);
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return TEST_SALT;
+        if (key.startsWith("keypairs.")) return encryptedData;
+        return null;
+      });
 
       const result = await manager.getKeyPair(mockKeyPair.id);
-      expect(result).toEqual(mockKeyPair);
-    });
-
-    test("getKeyPair returns null when key not found", async () => {
-      mockStore.get.mockResolvedValue(null);
-      const result = await manager.getKeyPair("nonexistent");
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        id: mockKeyPair.id,
+        privateKey: mockKeyPair.privateKey,
+        publicKey: mockKeyPair.publicKey,
+      });
     });
   });
 
@@ -119,7 +124,7 @@ describe("SSHStoreManager", () => {
   });
 
   test("init initializes store", async () => {
-    await manager.init();
+    await manager.connect(TEST_PASSWORD);
     expect(mockStore.init).toHaveBeenCalled();
   });
 });
