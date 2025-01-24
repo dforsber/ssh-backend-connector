@@ -30,10 +30,10 @@ export class CryptoWrapper {
     // Generate key and immediately clear password from memory
     try {
       this.key = scryptSync(password, this.salt, 32, {
-        N: 32768, // Increased from 16384 (still power of 2)
-        r: 16, // Increased from 8
-        p: 2, // Increased from 1
-        maxmem: 64 * 1024 * 1024, // Increased to 64MB
+        N: 16384, // CPU/memory cost parameter (must be power of 2)
+        r: 8,     // Block size parameter
+        p: 1,     // Parallelization parameter
+        maxmem: 32 * 1024 * 1024, // 32MB memory limit
       });
 
       // If salt is all zeros, simulate crypto verification failure
