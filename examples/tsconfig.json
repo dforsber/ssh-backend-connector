@@ -8,6 +8,6 @@
     "skipLibCheck": true,
     "outDir": "./dist"
   },
-  "include": ["esm/**/*"],
+  "include": ["esm/**/*.mts"],
   "exclude": ["node_modules"]
 }
