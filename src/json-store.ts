@@ -9,12 +9,16 @@ export class JSONStore {
 
   constructor(filePath: string) {
     // Prevent path traversal
+    if (filePath.includes('..')) {
+      throw new Error("Invalid file path");
+    }
+    
     const normalizedPath = normalize(filePath);
     const resolvedPath = normalize(dirname(normalizedPath) + '/' + basename(normalizedPath));
     const absolutePath = normalize(resolve(normalizedPath));
     const absoluteResolved = normalize(resolve(resolvedPath));
     
-    if (normalizedPath !== resolvedPath || absolutePath !== absoluteResolved || normalizedPath.includes('..')) {
+    if (normalizedPath !== resolvedPath || absolutePath !== absoluteResolved) {
       throw new Error("Invalid file path");
     }
     this.filePath = normalizedPath;
