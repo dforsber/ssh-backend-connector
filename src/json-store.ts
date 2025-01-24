@@ -39,7 +39,11 @@ export class JSONStore {
       return {};
     }
     const content = await readFile(this.filePath, "utf-8");
-    return JSON.parse(content);
+    const parsed = JSON.parse(content);
+    if (typeof parsed !== 'object' || parsed === null) {
+      throw new Error("Invalid store format");
+    }
+    return parsed;
   }
 
   private async saveStore(): Promise<void> {
