@@ -106,13 +106,13 @@ describe("SSHManager", () => {
 
       // Create manager with short timeout
       const managerWithTimeout = new SSHManager(mockStoreManager, {
-        connectionTimeout: 100 // 100ms timeout
+        connectionTimeout: 100, // 100ms timeout
       });
 
       await expect(managerWithTimeout.connect(mockBackend.id)).rejects.toThrow(
         "Connection timeout after 100ms"
       );
-      
+
       // Verify connection is cleaned up
       expect(mockClient.end).toHaveBeenCalled();
       expect(managerWithTimeout["connections"].size).toBe(0);
