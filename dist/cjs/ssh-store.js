@@ -28,8 +28,45 @@ var import_node_crypto = require("node:crypto");
 var CryptoWrapper = class {
   key;
   algorithm = "aes-256-gcm";
-  constructor(props) {
-    this.key = (0, import_node_crypto.scryptSync)(props.secretKey, props.salt, 32);
+  salt;
+  constructor(password, existingSalt) {
+    if (!password || password.length < 12) {
+      throw new Error("Password must be at least 12 characters long");
+    }
+    if (existingSalt && existingSalt.length !== 32) {
+      throw new Error("Invalid salt length");
+    }
+    this.salt = existingSalt || (0, import_node_crypto.randomBytes)(16).toString("hex");
+    try {
+      this.key = (0, import_node_crypto.scryptSync)(password, this.salt, 32, {
+        N: 16384,
+        // scrypt parameters must be power of 2
+        r: 8,
+        p: 1,
+        maxmem: 32 * 1024 * 1024
+        // 32MB
+      });
+      if (this.salt === "0".repeat(32)) {
+        throw new Error("Crypto verification failed");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to generate encryption key");
+    }
+    password = (0, import_node_crypto.randomBytes)(password.length).toString("hex");
+  }
+  // Method to securely clear sensitive data
+  destroy() {
+    if (this.key) {
+      (0, import_node_crypto.randomBytes)(this.key.length).copy(this.key);
+      this.key = void 0;
+    }
+    this.salt = "";
+  }
+  getSalt() {
+    return this.salt;
   }
   encrypt(text) {
     const iv = (0, import_node_crypto.randomBytes)(16);
@@ -41,8 +78,10 @@ var CryptoWrapper = class {
   decrypt(encryptedData) {
     const [ivHex, encryptedHex, tagHex] = encryptedData.split(":");
     const iv = Buffer.from(ivHex, "hex");
+    if (iv.length !== 16) throw new Error("Invalid IV length");
     const encrypted = Buffer.from(encryptedHex, "hex");
     const tag = Buffer.from(tagHex, "hex");
+    if (tag.length !== 16) throw new Error("Invalid auth tag length");
     const decipher = (0, import_node_crypto.createDecipheriv)(this.algorithm, this.key, iv);
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
@@ -57,11 +96,29 @@ var JSONStore = class {
   data;
   filePath;
   constructor(filePath) {
-    this.filePath = filePath;
+    try {
+      const normalizedPath = (0, import_path.normalize)(filePath);
+      if (filePath.includes("..") || normalizedPath.includes("..")) {
+        throw new Error("Invalid file path: contains path traversal");
+      }
+      if (!/^[a-zA-Z0-9/._-]+$/.test(filePath)) {
+        throw new Error("Invalid file path: contains invalid characters");
+      }
+      this.filePath = normalizedPath;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Invalid file path");
+    }
     this.data = {};
   }
   async init() {
-    this.data = await this.loadStore();
+    try {
+      this.data = await this.loadStore();
+    } catch (error) {
+      throw error;
+    }
   }
   async loadStore() {
     if (!(0, import_fs.existsSync)(this.filePath)) {
@@ -73,10 +130,28 @@ var JSONStore = class {
       return {};
     }
     const content = await (0, import_promises.readFile)(this.filePath, "utf-8");
-    return JSON.parse(content);
+    const parsed = JSON.parse(content);
+    if (typeof parsed !== "object" || parsed === null) {
+      throw new Error("Invalid store format");
+    }
+    return parsed;
   }
   async saveStore() {
-    await (0, import_promises.writeFile)(this.filePath, JSON.stringify(this.data, null, 2));
+    const tmpPath = `${this.filePath}.tmp`;
+    try {
+      await (0, import_promises.writeFile)(tmpPath, JSON.stringify(this.data, null, 2), {
+        mode: 384,
+        // Secure file permissions
+        flag: "wx"
+        // Fail if temp file exists
+      });
+      await (0, import_promises.rename)(tmpPath, this.filePath);
+    } finally {
+      try {
+        await (0, import_promises.unlink)(tmpPath);
+      } catch (err) {
+      }
+    }
   }
   async get(key) {
     return this.data[key] || null;
@@ -98,14 +173,44 @@ var JSONStore = class {
 var SSHStoreManager = class {
   store;
   crypto;
-  constructor(cryptoConfig, storePath = ".ssh-store/data.json") {
+  constructor(storePath = ".ssh-store/data.json") {
     this.store = new JSONStore(storePath);
-    this.crypto = new CryptoWrapper(cryptoConfig);
   }
-  async init() {
-    await this.store.init();
+  async connect(password) {
+    if (!password) throw new Error("Password is required");
+    try {
+      await this.store.init();
+      const salt = await this.store.get("crypto.salt");
+      this.crypto = new CryptoWrapper(password, salt);
+      if (!salt) await this.store.set("crypto.salt", this.crypto.getSalt());
+      const testData = "test";
+      const encrypted = this.crypto.encrypt(testData);
+      const decrypted = this.crypto.decrypt(encrypted);
+      if (decrypted !== testData) {
+        throw new Error("Crypto verification failed");
+      }
+    } catch (error) {
+      if (this.crypto) {
+        this.crypto.destroy();
+        this.crypto = void 0;
+      }
+      throw error;
+    }
+  }
+  disconnect() {
+    if (this.crypto) {
+      this.crypto.destroy();
+      this.crypto = void 0;
+    }
   }
   async saveKeyPair(keyPair) {
+    if (!this.crypto) throw new Error("Connect ssh store manager first");
+    if (!keyPair.id || !keyPair.privateKey || !keyPair.publicKey) {
+      throw new Error("Invalid key pair data");
+    }
+    if (!/^[a-zA-Z0-9-_]+$/.test(keyPair.id)) {
+      throw new Error("Invalid key pair ID format");
+    }
     const encrypted = {
       ...keyPair,
       privateKey: this.crypto.encrypt(keyPair.privateKey),
@@ -114,6 +219,7 @@ var SSHStoreManager = class {
     await this.store.set(`keypairs.${keyPair.id}`, encrypted);
   }
   async getKeyPair(id) {
+    if (!this.crypto) throw new Error("Connect ssh store manager first");
     const encrypted = await this.store.get(`keypairs.${id}`);
     if (!encrypted) return null;
     return {
@@ -134,6 +240,20 @@ var SSHStoreManager = class {
     const backendKeys = keys.filter((k) => k.startsWith("backends."));
     const backends = await Promise.all(backendKeys.map((k) => this.store.get(k)));
     return backends.filter((b) => b !== null && b !== void 0);
+  }
+  async deleteBackend(id) {
+    await this.store.delete(`backends.${id}`);
+  }
+  async deleteKeyPair(id) {
+    await this.store.delete(`keypairs.${id}`);
+  }
+  async getAllKeyPairs() {
+    const keys = await this.store.keys();
+    const keyPairKeys = keys.filter((k) => k.startsWith("keypairs."));
+    const keyPairs = await Promise.all(
+      keyPairKeys.map((k) => this.getKeyPair(k.replace("keypairs.", "")))
+    );
+    return keyPairs.filter((k) => k !== null);
   }
 };
 // Annotate the CommonJS export names for ESM import in node:

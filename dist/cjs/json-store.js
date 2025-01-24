@@ -29,11 +29,29 @@ var JSONStore = class {
   data;
   filePath;
   constructor(filePath) {
-    this.filePath = filePath;
+    try {
+      const normalizedPath = (0, import_path.normalize)(filePath);
+      if (filePath.includes("..") || normalizedPath.includes("..")) {
+        throw new Error("Invalid file path: contains path traversal");
+      }
+      if (!/^[a-zA-Z0-9/._-]+$/.test(filePath)) {
+        throw new Error("Invalid file path: contains invalid characters");
+      }
+      this.filePath = normalizedPath;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Invalid file path");
+    }
     this.data = {};
   }
   async init() {
-    this.data = await this.loadStore();
+    try {
+      this.data = await this.loadStore();
+    } catch (error) {
+      throw error;
+    }
   }
   async loadStore() {
     if (!(0, import_fs.existsSync)(this.filePath)) {
@@ -45,10 +63,28 @@ var JSONStore = class {
       return {};
     }
     const content = await (0, import_promises.readFile)(this.filePath, "utf-8");
-    return JSON.parse(content);
+    const parsed = JSON.parse(content);
+    if (typeof parsed !== "object" || parsed === null) {
+      throw new Error("Invalid store format");
+    }
+    return parsed;
   }
   async saveStore() {
-    await (0, import_promises.writeFile)(this.filePath, JSON.stringify(this.data, null, 2));
+    const tmpPath = `${this.filePath}.tmp`;
+    try {
+      await (0, import_promises.writeFile)(tmpPath, JSON.stringify(this.data, null, 2), {
+        mode: 384,
+        // Secure file permissions
+        flag: "wx"
+        // Fail if temp file exists
+      });
+      await (0, import_promises.rename)(tmpPath, this.filePath);
+    } finally {
+      try {
+        await (0, import_promises.unlink)(tmpPath);
+      } catch (err) {
+      }
+    }
   }
   async get(key) {
     return this.data[key] || null;
