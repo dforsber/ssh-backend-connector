@@ -33,7 +33,7 @@
     "example:cjs": "node examples/cjs/example.cjs",
     "lint": "eslint -c eslint.config.cjs src",
     "lint:fix": "eslint -c eslint.config.cjs src --fix",
-    "build:esm": "esbuild src/index.ts --bundle --platform=node --format=esm --outdir=dist/esm --external:cpu-features --external:ssh2",
+    "build:esm": "esbuild src/index.ts --bundle --platform=node --format=esm --outdir=dist/esm --external:cpu-features --external:ssh2 --preserve-modules",
     "build:cjs": "esbuild src/index.ts --bundle --platform=node --format=cjs --outdir=dist/cjs --external:cpu-features --external:ssh2",
     "build:types": "tsc -p tsconfig.types.json",
     "build": "rm -rf dist/ && yarn build:esm && yarn build:cjs && yarn build:types",

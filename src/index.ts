@@ -1,3 +1,3 @@
-export { SSHManager } from "./ssh-manager";
-export { SSHStoreManager } from "./ssh-store";
-export { Backend, StoreSchema, SSHKeyPair } from "./types";
+export { SSHManager } from "./ssh-manager.js";
+export { SSHStoreManager } from "./ssh-store.js";
+export { Backend, StoreSchema, SSHKeyPair } from "./types.js";
