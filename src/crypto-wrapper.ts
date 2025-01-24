@@ -11,7 +11,7 @@ export class CryptoWrapper {
     }
 
     // Validate salt length if provided
-    if (existingSalt && Buffer.from(existingSalt, "hex").length !== 16) {
+    if (existingSalt && Buffer.from(existingSalt, "hex").length !== 8) {
       throw new Error("Invalid salt length");
     }
 
