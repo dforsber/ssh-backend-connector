@@ -1,6 +1,7 @@
 import { SSHStoreManager } from "../src/ssh-store";
 import { JSONStore } from "../src/json-store";
 import { type SSHKeyPair, type Backend } from "../src/types";
+import { CryptoWrapper } from "../src/crypto-wrapper";
 
 jest.mock("../src/json-store");
 
