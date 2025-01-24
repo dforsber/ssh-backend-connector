@@ -43,19 +43,12 @@ export class JSONStore {
   private async verifyFilePermissions(filepath: string): Promise<void> {
     try {
       const stats = await stat(filepath);
-      if (!stats) {
-        throw new Error("File read error");
-      }
       if ((stats.mode & 0o777) !== 0o600) {
         throw new Error("Insecure file permissions detected - expected 0600");
       }
     } catch (error) {
-      // If it's a stat error, let it propagate as is
-      if (error instanceof Error && error.message === "File read error") {
-        throw error;
-      }
-      // For stat operation failures, throw the original error
-      throw error;
+      // Propagate stat errors as file read errors
+      throw new Error("File read error");
     }
   }
 
