@@ -36,6 +36,12 @@ describe("JSONStore", () => {
       expect(writeFile).toHaveBeenCalledWith(testPath, "{}");
     });
 
+    test("handles directory creation error", async () => {
+      (existsSync as jest.Mock).mockReturnValue(false);
+      (mkdir as jest.Mock).mockRejectedValue(new Error("Permission denied"));
+      await expect(store.init()).rejects.toThrow("Permission denied");
+    });
+
     test("loads existing store file", async () => {
       (existsSync as jest.Mock).mockReturnValue(true);
       (readFile as jest.Mock).mockResolvedValue('{"test": "value"}');
