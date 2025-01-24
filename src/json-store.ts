@@ -83,12 +83,6 @@ export class JSONStore {
   private async saveStore(): Promise<void> {
     const tmpPath = `${this.filePath}.tmp`;
     const jsonData = JSON.stringify(this.data, null, 2);
-    
-    // Check file size before writing
-    const byteSize = Buffer.byteLength(jsonData, 'utf8');
-    if (byteSize > this.maxFileSizeBytes) {
-      throw new Error(`File size (${byteSize} bytes) exceeds maximum allowed size (${this.maxFileSizeBytes} bytes)`);
-    }
 
     try {
       // Write to temp file first
@@ -114,6 +108,15 @@ export class JSONStore {
   }
 
   async set<T>(key: string, value: T): Promise<void> {
+    // Create a copy of data with the new value to check total size
+    const newData = { ...this.data, [key]: value };
+    const jsonData = JSON.stringify(newData, null, 2);
+    const byteSize = Buffer.byteLength(jsonData, 'utf8');
+    
+    if (byteSize > this.maxFileSizeBytes) {
+      throw new Error(`File size (${byteSize} bytes) exceeds maximum allowed size (${this.maxFileSizeBytes} bytes)`);
+    }
+
     this.data[key] = value;
     await this.saveStore();
   }
