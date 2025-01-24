@@ -95,22 +95,13 @@ describe("SSHStoreManager", () => {
     });
 
     test("cleans up on general error", async () => {
-      // Mock crypto verification to fail
+      // Mock get to return all zeros salt which triggers verification failure
       mockStore.get.mockImplementation(async (key) => {
-        if (key === "crypto.salt") return TEST_SALT;
+        if (key === "crypto.salt") return "0".repeat(32);
         return null;
       });
 
-      // Mock set to return a value that will cause decryption to fail
-      mockStore.set.mockImplementation(() => Promise.resolve());
-
-      // Mock get to return an invalid salt that will cause crypto verification to fail
-      mockStore.get.mockImplementation(async (key) => {
-        if (key === "crypto.salt") return "invalid-salt-value";
-        return null;
-      });
-
-      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow();
+      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
 
       // Verify crypto is cleaned up
       expect(await manager.getKeyPair("any-id").catch((e) => e.message)).toBe(
