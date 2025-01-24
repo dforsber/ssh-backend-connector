@@ -170,8 +170,8 @@ describe("JSONStore", () => {
     test("throws error when file size exceeds limit", async () => {
       // Mock writeFile to capture the data that would be written
       (writeFile as jest.Mock).mockImplementation((path, data) => {
-        const size = Buffer.byteLength(data, 'utf8');
-        if (size > JSONStore.DEFAULT_MAX_FILE_SIZE) {
+        const size = Buffer.byteLength(data, "utf8");
+        if (size > (JSONStore as any).DEFAULT_MAX_FILE_SIZE) {
           throw new Error(`File size (${size} bytes) exceeds maximum allowed size`);
         }
       });
@@ -188,18 +188,20 @@ describe("JSONStore", () => {
 
       // Mock writeFile for size checking
       (writeFile as jest.Mock).mockImplementation((path, data) => {
-        const size = Buffer.byteLength(data, 'utf8');
+        const size = Buffer.byteLength(data, "utf8");
         if (size > 100) {
           throw new Error(`File size (${size} bytes) exceeds maximum allowed size (100 bytes)`);
         }
       });
-      
+
       // Should succeed - small data
       await smallStore.set("small", { value: "test" });
 
       // Should fail - exceeds 100 bytes
       const largeData = { value: "x".repeat(100) };
-      await expect(smallStore.set("large", largeData)).rejects.toThrow(/File size .* exceeds maximum/);
+      await expect(smallStore.set("large", largeData)).rejects.toThrow(
+        /File size .* exceeds maximum/
+      );
     });
   });
 });
