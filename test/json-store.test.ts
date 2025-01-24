@@ -23,6 +23,12 @@ describe("JSONStore", () => {
   });
 
   describe("init", () => {
+    test("handles file read error", async () => {
+      (existsSync as jest.Mock).mockReturnValue(true);
+      (readFile as jest.Mock).mockRejectedValue(new Error("File read error"));
+      await expect(store.init()).rejects.toThrow("File read error");
+    });
+
     test("creates new store file if it doesn't exist", async () => {
       (existsSync as jest.Mock).mockReturnValue(false);
       await store.init();
