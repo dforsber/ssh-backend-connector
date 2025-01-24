@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.13](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.12...v0.5.13) (2025-01-24)
+
+
+### Features
+
+* Add ESM and CJS example files with TypeScript configuration ([c20d36c](https://github.com/dforsber/ssh-backend-connector/commit/c20d36ccdb671ac63d432e311bc1162e9b18bfd4))
+* Add ESM module support for examples with package.json and tsconfig updates ([38a15bb](https://github.com/dforsber/ssh-backend-connector/commit/38a15bb0ecea4e8c81914390d0517172ecff0821))
+* Add SSH key pair generation to example scripts ([75bb9ff](https://github.com/dforsber/ssh-backend-connector/commit/75bb9ff9daaae1957e906a73374a4940bcc810d8))
+* Add TypeScript declaration file for test keys module ([f692767](https://github.com/dforsber/ssh-backend-connector/commit/f692767f68468703adf15978c5e4673d8e4a0247))
+* Add TypeScript type generation to build process ([b52f880](https://github.com/dforsber/ssh-backend-connector/commit/b52f880aa04b32d3fc9d0b62f78de878407b021a))
+* Generate dynamic test SSH keys for examples ([33cc907](https://github.com/dforsber/ssh-backend-connector/commit/33cc9077216de4512a2e17fa525c34f336973d85))
+* Improve ESM example configuration and add example run script ([d631ccd](https://github.com/dforsber/ssh-backend-connector/commit/d631ccdcf938a898befed10f24267dd997a11fb3))
+* Update package.json exports and add module-specific package.json files ([e968ec2](https://github.com/dforsber/ssh-backend-connector/commit/e968ec27dd062e8abe27c891ac0f5f0703b8a261))
+
+
+### Bug Fixes
+
+* Add --bundle flag to esbuild scripts to resolve external module error ([d3448ef](https://github.com/dforsber/ssh-backend-connector/commit/d3448ef4e9c5d21c1b75d5c0551caa5ab54f56b3))
+* Import SSHManager in CJS example ([bbdbce4](https://github.com/dforsber/ssh-backend-connector/commit/bbdbce47d1fc45385598aae22ac669dbd780297b))
+* Remove invalid --preserve-modules flag from build scripts ([67f2c73](https://github.com/dforsber/ssh-backend-connector/commit/67f2c7347225afd285f11e22bda2accc955c0b77))
+* Remove invalid `--preserve-modules` flag from esbuild script ([b55fcf3](https://github.com/dforsber/ssh-backend-connector/commit/b55fcf315ea8846743e80580e3b1db634baed874))
+* Remove unused SSHManager import from example files ([6cd5692](https://github.com/dforsber/ssh-backend-connector/commit/6cd56929f6945c86db86f3ddd31b80a6391dd055))
+* Reorder package.json exports to resolve esbuild type warning ([b122a3e](https://github.com/dforsber/ssh-backend-connector/commit/b122a3e45b888b069c7863338a4b56031533a58b))
+* Update ESM build config and export paths for proper module resolution ([236a4f5](https://github.com/dforsber/ssh-backend-connector/commit/236a4f5f4ef217777bf1ac644cd66516fcb9eb5f))
+* Update ESM example to correctly initialize and connect SSH store manager ([9848117](https://github.com/dforsber/ssh-backend-connector/commit/984811725fb41c1a4aca4d45fea6f4260090fcb9))
+* Update ESM import path in example to use dist/esm directory ([8b5f6bf](https://github.com/dforsber/ssh-backend-connector/commit/8b5f6bfa62ef5ca22f8d78d13a29dd76a50f94ec))
+* Update import and SSHManager usage in example files ([3dda2a8](https://github.com/dforsber/ssh-backend-connector/commit/3dda2a8cced25f0b7908ed964e556aef9293f774))
+* Update import paths and add missing SSHManager import in examples ([b7f937a](https://github.com/dforsber/ssh-backend-connector/commit/b7f937a58b697c220992c24436a28cc1e7f76387))
+* Update import paths in ESM example to match package exports ([8c73db0](https://github.com/dforsber/ssh-backend-connector/commit/8c73db0395ec335ce79cad86ec298329ddc67ae8))
+* Update module exports and build configuration for ESM compatibility ([4269c52](https://github.com/dforsber/ssh-backend-connector/commit/4269c520346546b5bc43ff14cc1b226db7d9d424))
+* Update package exports and build configuration for proper module resolution ([2af71e2](https://github.com/dforsber/ssh-backend-connector/commit/2af71e206f0735dfe1606b2faf485f5935bbbc8a))
+* Update package.json exports for better TypeScript module import support ([77b4879](https://github.com/dforsber/ssh-backend-connector/commit/77b487974e97ad6a425fdd913bb0f9ed3671e668))
+* Update SSH key pair with valid OpenSSH format in examples ([c2a1940](https://github.com/dforsber/ssh-backend-connector/commit/c2a194077f76b74673b8b09bf286cb447d8ab0f9))
+
 ### [0.5.12](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.11...v0.5.12) (2025-01-24)
 
 ### [0.5.11](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.10...v0.5.11) (2025-01-24)
