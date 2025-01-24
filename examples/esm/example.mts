@@ -1,4 +1,4 @@
-import { SSHStoreManager } from "../../dist/esm/index.js";
+import { SSHStoreManager, SSHManager } from "../../dist/esm/index.js";
 import type { Backend } from "../../dist/esm/types.js";
 
 async function main(): Promise<void> {
