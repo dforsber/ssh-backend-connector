@@ -61,7 +61,7 @@ describe("CryptoWrapper", () => {
   });
 
   test("uses existing salt when provided", () => {
-    const existingSalt = "0123456789abcdef";
+    const existingSalt = "0123456789abcdef0123456789abcdef";
     const wrapper = new CryptoWrapper(validPassword, existingSalt);
     expect(wrapper.getSalt()).toBe(existingSalt);
   });
