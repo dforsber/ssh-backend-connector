@@ -9,9 +9,9 @@ export class CryptoWrapper {
     if (!password || password.length < 12) {
       throw new Error("Password must be at least 12 characters long");
     }
-    
+
     this.salt = existingSalt || randomBytes(16).toString("hex");
-    
+
     // Generate key and immediately clear password from memory
     this.key = scryptSync(password, this.salt, 32, {
       N: 16384, // scrypt parameters must be power of 2
@@ -19,9 +19,9 @@ export class CryptoWrapper {
       p: 1,
       maxmem: 32 * 1024 * 1024, // 32MB
     });
-    
+
     // Overwrite password in memory
-    password = randomBytes(password.length).toString('hex');
+    password = randomBytes(password.length).toString("hex");
   }
 
   // Method to securely clear sensitive data
@@ -31,7 +31,7 @@ export class CryptoWrapper {
       randomBytes(this.key.length).copy(this.key);
       this.key = undefined;
     }
-    this.salt = '';
+    this.salt = "";
   }
 
   public getSalt(): string {
