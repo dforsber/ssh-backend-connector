@@ -11,7 +11,7 @@ export class JSONStore {
     // Prevent path traversal
     const normalizedPath = normalize(filePath);
     const resolvedPath = normalize(dirname(normalizedPath) + '/' + basename(normalizedPath));
-    if (normalizedPath !== resolvedPath) {
+    if (normalizedPath !== resolvedPath || normalizedPath.includes('..')) {
       throw new Error("Invalid file path");
     }
     this.filePath = normalizedPath;
