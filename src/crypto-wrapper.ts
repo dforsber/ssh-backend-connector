@@ -10,8 +10,8 @@ export class CryptoWrapper {
       throw new Error("Password must be at least 12 characters long");
     }
 
-    // Validate salt length if provided
-    if (existingSalt && Buffer.from(existingSalt, "hex").length !== 8) {
+    // Validate salt length if provided (32 chars in hex = 16 bytes)
+    if (existingSalt && existingSalt.length !== 32) {
       throw new Error("Invalid salt length");
     }
 
