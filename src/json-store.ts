@@ -1,7 +1,7 @@
 // store.ts
 import { readFile, writeFile, mkdir, rename, unlink } from "fs/promises";
 import { existsSync } from "fs";
-import { dirname, normalize, basename } from "path";
+import { dirname, normalize, basename, resolve } from "path";
 
 export class JSONStore {
   private data: Record<string, unknown>;
@@ -11,7 +11,10 @@ export class JSONStore {
     // Prevent path traversal
     const normalizedPath = normalize(filePath);
     const resolvedPath = normalize(dirname(normalizedPath) + '/' + basename(normalizedPath));
-    if (normalizedPath !== resolvedPath || normalizedPath.includes('..')) {
+    const absolutePath = normalize(resolve(normalizedPath));
+    const absoluteResolved = normalize(resolve(resolvedPath));
+    
+    if (normalizedPath !== resolvedPath || absolutePath !== absoluteResolved || normalizedPath.includes('..')) {
       throw new Error("Invalid file path");
     }
     this.filePath = normalizedPath;
