@@ -11,6 +11,7 @@ export class SSHStoreManager {
   }
 
   public async connect(password: string): Promise<void> {
+    if (!password) throw new Error("Password is required");
     await this.store.init();
     const salt = await this.store.get<string>("crypto.salt");
     this.crypto = new CryptoWrapper(password, salt);
