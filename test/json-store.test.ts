@@ -1,6 +1,6 @@
 // test/store.test.ts
 import { JSONStore } from "../src/json-store";
-import { readFile, writeFile, mkdir } from "fs/promises";
+import { readFile, writeFile, mkdir, stat } from "fs/promises";
 import { existsSync } from "fs";
 
 jest.mock("fs/promises", () => ({
@@ -53,6 +53,25 @@ describe("JSONStore", () => {
   });
 
   describe("init", () => {
+    test("throws error when file permissions are insecure", async () => {
+      (existsSync as jest.Mock).mockReturnValue(true);
+      (stat as jest.Mock).mockResolvedValue({ mode: 0o644 }); // Wrong permissions
+      await expect(store.init()).rejects.toThrow("Insecure file permissions detected - expected 0600");
+    });
+
+    test("accepts file with correct permissions", async () => {
+      (existsSync as jest.Mock).mockReturnValue(true);
+      (stat as jest.Mock).mockResolvedValue({ mode: 0o600 }); // Correct permissions
+      (readFile as jest.Mock).mockResolvedValue("{}");
+      await expect(store.init()).resolves.not.toThrow();
+    });
+
+    test("handles null stats object", async () => {
+      (existsSync as jest.Mock).mockReturnValue(true);
+      (stat as jest.Mock).mockResolvedValue(null);
+      await expect(store.init()).rejects.toThrow("File read error");
+    });
+
     test("handles file read error", async () => {
       (existsSync as jest.Mock).mockReturnValue(true);
       (readFile as jest.Mock).mockRejectedValue(new Error("File read error"));
