@@ -4,7 +4,7 @@ import { JSONStore } from "./json-store";
 
 export class SSHStoreManager {
   private store: JSONStore;
-  private crypto: CryptoWrapper;
+  private crypto?: CryptoWrapper;
 
   constructor(storePath = ".ssh-store/data.json") {
     this.store = new JSONStore(storePath);
@@ -12,10 +12,35 @@ export class SSHStoreManager {
 
   public async connect(password: string): Promise<void> {
     if (!password) throw new Error("Password is required");
-    await this.store.init();
-    const salt = await this.store.get<string>("crypto.salt");
-    this.crypto = new CryptoWrapper(password, salt);
-    if (!salt) await this.store.set("crypto.salt", this.crypto.getSalt());
+    
+    try {
+      await this.store.init();
+      const salt = await this.store.get<string>("crypto.salt");
+      this.crypto = new CryptoWrapper(password, salt);
+      if (!salt) await this.store.set("crypto.salt", this.crypto.getSalt());
+      
+      // Test crypto is working by trying to encrypt/decrypt test data
+      const testData = "test";
+      const encrypted = this.crypto.encrypt(testData);
+      const decrypted = this.crypto.decrypt(encrypted);
+      if (decrypted !== testData) {
+        throw new Error("Crypto verification failed");
+      }
+    } catch (error) {
+      // Clean up on error
+      if (this.crypto) {
+        this.crypto.destroy();
+        this.crypto = undefined;
+      }
+      throw error;
+    }
+  }
+
+  public disconnect(): void {
+    if (this.crypto) {
+      this.crypto.destroy();
+      this.crypto = undefined;
+    }
   }
 
   async saveKeyPair(keyPair: SSHKeyPair): Promise<void> {

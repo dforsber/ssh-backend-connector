@@ -50,7 +50,7 @@ describe("SSHManager", () => {
       return this;
     });
 
-    manager = new SSHManager(pw, mockStoreManager);
+    manager = new SSHManager(mockStoreManager);
   });
 
   describe("connect", () => {

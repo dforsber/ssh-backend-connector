@@ -11,8 +11,8 @@ export class SSHManager {
   private store: SSHStoreManager;
   private connections: Map<string, Client>;
 
-  constructor(password: string, store?: SSHStoreManager) {
-    this.store = store || new SSHStoreManager(password);
+  constructor(store: SSHStoreManager) {
+    this.store = store;
     this.connections = new Map();
   }
 
