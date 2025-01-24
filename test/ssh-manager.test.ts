@@ -118,6 +118,24 @@ describe("SSHManager", () => {
       expect(managerWithTimeout["connections"].size).toBe(0);
     });
 
+    test("throws when max concurrent connections reached", async () => {
+      mockStoreManager.getBackend.mockResolvedValue(mockBackend);
+      mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
+
+      // Create manager with max 1 connection
+      const managerWithLimit = new SSHManager(mockStoreManager, {
+        maxConcurrentConnections: 1
+      });
+
+      // First connection should succeed
+      await managerWithLimit.connect(mockBackend.id);
+
+      // Second connection should fail
+      await expect(managerWithLimit.connect("another-backend")).rejects.toThrow(
+        "Maximum concurrent connections (1) reached"
+      );
+    });
+
     test("resets attempt count after reset time", async () => {
       const backendId = "test-backend";
       const oldTime = Date.now() - 400000; // Older than attemptResetTimeMs (300000)
