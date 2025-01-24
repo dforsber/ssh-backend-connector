@@ -47,6 +47,10 @@ describe("JSONStore", () => {
       (existsSync as jest.Mock).mockReturnValue(true);
       (readFile as jest.Mock).mockResolvedValue("invalid json");
       await expect(store.init()).rejects.toThrow(SyntaxError);
+      
+      // Test with corrupted JSON that might parse but is not an object
+      (readFile as jest.Mock).mockResolvedValue('"not an object"');
+      await expect(store.init()).rejects.toThrow("Invalid store format");
     });
   });
 
