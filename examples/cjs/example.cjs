@@ -21,6 +21,15 @@ async function main() {
   };
 
   try {
+    // Create and save an SSH key pair first
+    const keyPair = {
+      id: "key1",
+      privateKey: "-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----",
+      publicKey: "ssh-rsa AAAA...",
+      name: "Example Key"
+    };
+    await storeManager.saveKeyPair(keyPair);
+
     // Save the backend configuration
     await storeManager.saveBackend(backend);
 
