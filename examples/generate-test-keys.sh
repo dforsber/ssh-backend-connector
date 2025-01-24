@@ -19,6 +19,16 @@ export const testKeys = {
 };
 EOL
 
+# Create TypeScript declaration file
+cat > examples/test-keys/keys.d.ts << EOL
+export interface TestKeys {
+  privateKey: string;
+  publicKey: string;
+}
+
+export const testKeys: TestKeys;
+EOL
+
 # Create a CommonJS module with the keys
 cat > examples/test-keys/keys.cjs << EOL
 module.exports = {
