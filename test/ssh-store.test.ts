@@ -65,6 +65,40 @@ describe("SSHStoreManager", () => {
     test("throws error if called without password", async () => {
       await expect(manager.connect("")).rejects.toThrow("Password is required");
     });
+
+    test("throws and cleans up if crypto verification fails", async () => {
+      mockStore.get.mockResolvedValue(TEST_SALT);
+      
+      // Create a corrupted crypto instance that fails verification
+      const corruptedCrypto = {
+        encrypt: jest.fn().mockReturnValue("encrypted"),
+        decrypt: jest.fn().mockReturnValue("wrong-data"),
+        destroy: jest.fn(),
+        getSalt: jest.fn().mockReturnValue(TEST_SALT),
+      };
+      
+      // Mock CryptoWrapper to return corrupted instance
+      jest.spyOn(manager as any, 'crypto', 'set').mockImplementation(() => corruptedCrypto);
+
+      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
+      expect(corruptedCrypto.destroy).toHaveBeenCalled();
+    });
+
+    test("cleans up crypto on general error", async () => {
+      mockStore.get.mockRejectedValue(new Error("Store error"));
+      
+      const crypto = {
+        encrypt: jest.fn(),
+        decrypt: jest.fn(),
+        destroy: jest.fn(),
+        getSalt: jest.fn(),
+      };
+      
+      jest.spyOn(manager as any, 'crypto', 'set').mockImplementation(() => crypto);
+
+      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Store error");
+      expect(crypto.destroy).toHaveBeenCalled();
+    });
   });
 
   describe("keyPair operations", () => {
