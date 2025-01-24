@@ -1,8 +1,6 @@
 # SSH Backend Connector
 
-[![Coverage](https://codecov.io/gh/OWNER/REPO/branch/main/graph/badge.svg)](https://codecov.io/gh/OWNER/REPO)
-
-> Secure SSH backend connection manager for Electron applications with encrypted key storage.
+> Secure SSH backend connection manager for applications with password protected encrypted key storage.
 
 🔒 **100% Test Coverage** | 🛡️ **Type-Safe** | 🔐 **AES-256-GCM Encryption**
 
@@ -50,7 +48,7 @@ try {
 
   // Create SSH manager with the store
   const ssh = new SSHManager(store);
-  
+
   // Connect and setup tunnel
   await ssh.connect("prod");
   await ssh.setupTunnel("prod", {
@@ -62,13 +60,14 @@ try {
   ssh.disconnect("prod");
   store.disconnect(); // Clears sensitive data from memory
 } catch (error) {
-  console.error('Error:', error);
+  console.error("Error:", error);
 }
 ```
 
 ## API
 
 ### SSHStoreManager
+
 - `connect(password: string)`: Initialize encryption with password
 - `disconnect()`: Clear sensitive data from memory
 - `saveKeyPair(keyPair: SSHKeyPair)`: Store encrypted SSH key pair
@@ -81,6 +80,7 @@ try {
 - `deleteBackend(id: string)`: Remove backend config
 
 ### SSHManager
+
 - `constructor(store: SSHStoreManager)`: Create manager with store
 - `connect(backendId: string)`: Establish SSH connection
 - `setupTunnel(backendId: string, config: TunnelConfig)`: Create SSH tunnel
