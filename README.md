@@ -90,12 +90,38 @@ try {
 
 This package takes security seriously:
 
-✓ Passwords must be at least 12 characters  
+✓ Passwords must be at least 12 characters with complexity requirements  
 ✓ Keys are encrypted using AES-256-GCM  
 ✓ Sensitive data is automatically cleared from memory  
 ✓ Password is never stored in memory  
 ✓ Encryption is verified on connection  
+✓ Rate limiting on connection attempts  
+✓ Connection timeouts to prevent hanging  
+✓ Maximum concurrent connections limit  
+✓ File size limits to prevent DoS  
+✓ Secure file permissions (0600)  
+✓ Path traversal protection  
 ✓ 100% test coverage ensures reliable security features
+
+### Future Security Improvements
+
+The following security enhancements are planned for future releases:
+
+- **Crypto Versioning**
+  - Version tags for encrypted data
+  - Support for key rotation
+  - Crypto algorithm negotiation
+
+- **SSH Security**
+  - SSH key format validation
+  - Host key verification
+  - Certificate validation support
+
+- **Advanced Security Features**
+  - Audit logging
+  - Intrusion detection
+  - Automated backup/restore
+  - Key expiration and rotation policies
 
 ## Development
 
