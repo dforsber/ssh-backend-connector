@@ -1,14 +1,39 @@
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/ssh-store.ts
+var ssh_store_exports = {};
+__export(ssh_store_exports, {
+  SSHStoreManager: () => SSHStoreManager
+});
+module.exports = __toCommonJS(ssh_store_exports);
+
 // src/crypto-wrapper.ts
-import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
+var import_node_crypto = require("node:crypto");
 var CryptoWrapper = class {
   key;
   algorithm = "aes-256-gcm";
   constructor(props) {
-    this.key = scryptSync(props.secretKey, props.salt, 32);
+    this.key = (0, import_node_crypto.scryptSync)(props.secretKey, props.salt, 32);
   }
   encrypt(text) {
-    const iv = randomBytes(16);
-    const cipher = createCipheriv(this.algorithm, this.key, iv);
+    const iv = (0, import_node_crypto.randomBytes)(16);
+    const cipher = (0, import_node_crypto.createCipheriv)(this.algorithm, this.key, iv);
     const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
     const tag = cipher.getAuthTag();
     return `${iv.toString("hex")}:${encrypted.toString("hex")}:${tag.toString("hex")}`;
@@ -18,16 +43,16 @@ var CryptoWrapper = class {
     const iv = Buffer.from(ivHex, "hex");
     const encrypted = Buffer.from(encryptedHex, "hex");
     const tag = Buffer.from(tagHex, "hex");
-    const decipher = createDecipheriv(this.algorithm, this.key, iv);
+    const decipher = (0, import_node_crypto.createDecipheriv)(this.algorithm, this.key, iv);
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
   }
 };
 
 // src/json-store.ts
-import { readFile, writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
-import { dirname } from "path";
+var import_promises = require("fs/promises");
+var import_fs = require("fs");
+var import_path = require("path");
 var JSONStore = class {
   data;
   filePath;
@@ -39,19 +64,19 @@ var JSONStore = class {
     this.data = await this.loadStore();
   }
   async loadStore() {
-    if (!existsSync(this.filePath)) {
-      const dir = dirname(this.filePath);
-      if (!existsSync(dir)) {
-        await mkdir(dir, { recursive: true });
+    if (!(0, import_fs.existsSync)(this.filePath)) {
+      const dir = (0, import_path.dirname)(this.filePath);
+      if (!(0, import_fs.existsSync)(dir)) {
+        await (0, import_promises.mkdir)(dir, { recursive: true });
       }
-      await writeFile(this.filePath, "{}");
+      await (0, import_promises.writeFile)(this.filePath, "{}");
       return {};
     }
-    const content = await readFile(this.filePath, "utf-8");
+    const content = await (0, import_promises.readFile)(this.filePath, "utf-8");
     return JSON.parse(content);
   }
   async saveStore() {
-    await writeFile(this.filePath, JSON.stringify(this.data, null, 2));
+    await (0, import_promises.writeFile)(this.filePath, JSON.stringify(this.data, null, 2));
   }
   async get(key) {
     return this.data[key] || null;
@@ -111,6 +136,7 @@ var SSHStoreManager = class {
     return backends.filter((b) => b !== null && b !== void 0);
   }
 };
-export {
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
   SSHStoreManager
-};
+});
