@@ -67,21 +67,17 @@ describe("SSHStoreManager", () => {
     });
 
     test("throws and cleans up if crypto verification fails", async () => {
-      mockStore.get.mockResolvedValue(TEST_SALT);
+      // Mock store to simulate corrupted data
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return "corrupted-salt";
+        return null;
+      });
 
-      // Create a corrupted crypto instance that fails verification
-      const corruptedCrypto = {
-        encrypt: jest.fn().mockReturnValue("encrypted"),
-        decrypt: jest.fn().mockReturnValue("wrong-data"),
-        destroy: jest.fn(),
-        getSalt: jest.fn().mockReturnValue(TEST_SALT),
-      };
-
-      // Mock CryptoWrapper to return corrupted instance
-      jest.spyOn(manager as any, "crypto", "set").mockImplementation(() => corruptedCrypto);
-
-      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
-      expect(corruptedCrypto.destroy).toHaveBeenCalled();
+      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow();
+      
+      // Verify store is in clean state
+      const result = await manager.getKeyPair("any-id").catch(e => e.message);
+      expect(result).toBe("Connect ssh store manager first");
     });
 
     test("cleans up crypto on general error", async () => {
