@@ -104,12 +104,14 @@ describe("SSHStoreManager", () => {
       // Mock set to return a value that will cause decryption to fail
       mockStore.set.mockImplementation(() => Promise.resolve());
 
-      // Mock set to simulate crypto test failure
-      mockStore.set.mockImplementation(async (key, value) => {
-        if (key === "test-crypto-verification") {
-          throw new Error("Crypto verification failed");
-        }
+      // Mock get to return corrupted data that will fail decryption
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return TEST_SALT;
+        return null;
       });
+
+      // Mock set to return a value that will cause decryption to fail
+      mockStore.set.mockImplementation(() => Promise.resolve());
 
       await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
 
