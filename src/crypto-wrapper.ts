@@ -13,12 +13,16 @@ export class CryptoWrapper {
     this.salt = existingSalt || randomBytes(16).toString("hex");
 
     // Generate key and immediately clear password from memory
-    this.key = scryptSync(password, this.salt, 32, {
-      N: 16384, // scrypt parameters must be power of 2
-      r: 8,
-      p: 1,
-      maxmem: 32 * 1024 * 1024, // 32MB
-    });
+    try {
+      this.key = scryptSync(password, this.salt, 32, {
+        N: 16384, // scrypt parameters must be power of 2
+        r: 8,
+        p: 1,
+        maxmem: 32 * 1024 * 1024, // 32MB
+      });
+    } catch (error) {
+      throw new Error("Failed to generate encryption key");
+    }
 
     // Overwrite password in memory
     password = randomBytes(password.length).toString("hex");

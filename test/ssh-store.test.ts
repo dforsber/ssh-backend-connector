@@ -67,13 +67,13 @@ describe("SSHStoreManager", () => {
     });
 
     test("throws and cleans up if crypto verification fails", async () => {
-      // Mock store to simulate corrupted data
+      // Mock store to return a salt that will cause crypto verification to fail
       mockStore.get.mockImplementation(async (key) => {
-        if (key === "crypto.salt") return "corrupted-salt";
+        if (key === "crypto.salt") return "0".repeat(32); // Invalid salt
         return null;
       });
 
-      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow();
+      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
       
       // Verify store is in clean state
       const result = await manager.getKeyPair("any-id").catch(e => e.message);
