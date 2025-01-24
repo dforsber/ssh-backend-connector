@@ -6,8 +6,10 @@ import { dirname, normalize } from "path";
 export class JSONStore {
   private data: Record<string, unknown>;
   private filePath: string;
+  private readonly maxFileSizeBytes: number;
+  private static readonly DEFAULT_MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 
-  constructor(filePath: string) {
+  constructor(filePath: string, maxFileSizeBytes = JSONStore.DEFAULT_MAX_FILE_SIZE) {
     // Prevent path traversal and other invalid paths
     try {
       const normalizedPath = normalize(filePath);
@@ -80,9 +82,17 @@ export class JSONStore {
 
   private async saveStore(): Promise<void> {
     const tmpPath = `${this.filePath}.tmp`;
+    const jsonData = JSON.stringify(this.data, null, 2);
+    
+    // Check file size before writing
+    const byteSize = Buffer.byteLength(jsonData, 'utf8');
+    if (byteSize > this.maxFileSizeBytes) {
+      throw new Error(`File size (${byteSize} bytes) exceeds maximum allowed size (${this.maxFileSizeBytes} bytes)`);
+    }
+
     try {
       // Write to temp file first
-      await writeFile(tmpPath, JSON.stringify(this.data, null, 2), {
+      await writeFile(tmpPath, jsonData, {
         mode: 0o600, // Secure file permissions
         flag: "wx", // Fail if temp file exists
       });

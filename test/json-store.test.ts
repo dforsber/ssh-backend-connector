@@ -166,5 +166,23 @@ describe("JSONStore", () => {
       const keys = await store.keys();
       expect(keys).toEqual(["test1", "test2"]);
     });
+
+    test("throws error when file size exceeds limit", async () => {
+      // Create large object that will exceed default limit
+      const largeData = { value: "x".repeat(201 * 1024 * 1024) }; // 201MB of data
+      await expect(store.set("large", largeData)).rejects.toThrow(/File size .* exceeds maximum/);
+    });
+
+    test("respects custom file size limit", async () => {
+      const smallStore = new JSONStore(testPath, 100); // 100 bytes limit
+      await smallStore.init();
+      
+      // Should succeed - small data
+      await smallStore.set("small", { value: "test" });
+
+      // Should fail - exceeds 100 bytes
+      const largeData = { value: "x".repeat(100) };
+      await expect(smallStore.set("large", largeData)).rejects.toThrow(/File size .* exceeds maximum/);
+    });
   });
 });
