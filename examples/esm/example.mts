@@ -1,4 +1,4 @@
-import { SSHStoreManager, SSHManager, Backend } from "../../";
+import { SSHStoreManager, SSHManager, Backend } from "../../../ssh-backend-connector";
 
 async function main(): Promise<void> {
   // Initialize the store manager with a custom path
@@ -28,7 +28,7 @@ async function main(): Promise<void> {
       id: "key1",
       privateKey: testKeys.privateKey,
       publicKey: testKeys.publicKey,
-      name: "Example Key"
+      name: "Example Key",
     };
     await storeManager.saveKeyPair(keyPair);
 

@@ -1,11 +1,7 @@
-import Store from "electron-store";
-
 export interface StoreSchema {
   keypairs: Record<string, SSHKeyPair>;
   backends: Record<string, Backend>;
 }
-
-export type SSHStore = Store<StoreSchema>;
 
 export interface SSHKeyPair {
   id: string;

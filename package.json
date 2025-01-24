@@ -43,7 +43,6 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\""
   },
   "dependencies": {
-    "electron-store": "^10.0.0",
     "ssh2": "^1.16.0",
     "standard-version": "^9.5.0"
   },
@@ -59,6 +58,7 @@
     "jest": "^29.7.0",
     "prettier": "^3.4.2",
     "ts-jest": "^29.2.5",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }
 }
