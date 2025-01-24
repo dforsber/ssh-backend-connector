@@ -17,6 +17,11 @@ describe("JSONStore", () => {
     jest.clearAllMocks();
   });
 
+  test("throws error on path traversal attempt", () => {
+    expect(() => new JSONStore("../test/store.json")).toThrow("Invalid file path");
+    expect(() => new JSONStore("test/../store.json")).toThrow("Invalid file path");
+  });
+
   describe("init", () => {
     test("creates new store file if it doesn't exist", async () => {
       (existsSync as jest.Mock).mockReturnValue(false);
