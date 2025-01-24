@@ -105,14 +105,16 @@ This package takes security seriously:
 
 ### Future Security Improvements
 
-The following security enhancements are planned for future releases:
+Here is a list of potential future work items in the security area:
 
 - **Crypto Versioning**
+
   - Version tags for encrypted data
   - Support for key rotation
   - Crypto algorithm negotiation
 
 - **SSH Security**
+
   - SSH key format validation
   - Host key verification
   - Certificate validation support
