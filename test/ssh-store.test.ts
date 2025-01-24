@@ -206,6 +206,21 @@ describe("SSHStoreManager", () => {
       );
     });
 
+    test("throws error when saving key pair with missing required fields", async () => {
+      const invalidKeyPair = { id: "", privateKey: "", publicKey: "" };
+      await expect(manager.saveKeyPair(invalidKeyPair)).rejects.toThrow("Invalid key pair data");
+    });
+
+    test("throws error when saving key pair with invalid ID format", async () => {
+      const invalidKeyPair = {
+        ...mockKeyPair,
+        id: "invalid@id#here",
+      };
+      await expect(manager.saveKeyPair(invalidKeyPair)).rejects.toThrow(
+        "Invalid key pair ID format"
+      );
+    });
+
     test("throws error when trying to get key pair without connecting first", async () => {
       manager = new SSHStoreManager();
       await expect(manager.getKeyPair(mockKeyPair.id)).rejects.toThrow(
