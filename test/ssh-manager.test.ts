@@ -94,6 +94,68 @@ describe("SSHManager", () => {
 
       await expect(manager.connect(mockBackend.id)).rejects.toThrow("Connection failed");
     });
+
+    test("resets attempt count after reset time", async () => {
+      const backendId = "test-backend";
+      const oldTime = Date.now() - 400000; // Older than attemptResetTimeMs (300000)
+      
+      // Set up initial attempts
+      manager["connectionAttempts"].set(backendId, {
+        count: 3,
+        lastAttempt: oldTime
+      });
+
+      mockStoreManager.getBackend.mockResolvedValue(mockBackend);
+      mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
+
+      // Should not throw as attempts should reset
+      await manager.connect(backendId);
+
+      // Verify attempts were reset
+      const newAttempts = manager["connectionAttempts"].get(backendId);
+      expect(newAttempts?.count).toBe(1);
+      expect(newAttempts?.lastAttempt).toBeGreaterThan(oldTime);
+    });
+
+    test("throws error when max attempts exceeded within reset time", async () => {
+      const backendId = "test-backend";
+      const recentTime = Date.now() - 1000; // Recent attempt
+      
+      // Set up max attempts
+      manager["connectionAttempts"].set(backendId, {
+        count: manager["maxConnectionAttempts"],
+        lastAttempt: recentTime
+      });
+
+      mockStoreManager.getBackend.mockResolvedValue(mockBackend);
+      mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
+
+      // Should throw due to too many attempts
+      await expect(manager.connect(backendId)).rejects.toThrow(
+        "Too many connection attempts. Please try again later."
+      );
+    });
+
+    test("increments attempt count within reset time", async () => {
+      const backendId = "test-backend";
+      const recentTime = Date.now() - 1000; // Recent attempt
+      
+      // Set up initial attempts
+      manager["connectionAttempts"].set(backendId, {
+        count: 1,
+        lastAttempt: recentTime
+      });
+
+      mockStoreManager.getBackend.mockResolvedValue(mockBackend);
+      mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
+
+      await manager.connect(backendId);
+
+      // Verify attempt count was incremented
+      const attempts = manager["connectionAttempts"].get(backendId);
+      expect(attempts?.count).toBe(2);
+      expect(attempts?.lastAttempt).toBeGreaterThan(recentTime);
+    });
   });
 
   describe("setupTunnel", () => {
