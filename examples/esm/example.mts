@@ -1,4 +1,4 @@
-import { SSHStoreManager } from "../../dist/esm/index.js";
+import { SSHManager, SSHStoreManager } from "../../dist/esm/index.js";
 import type { Backend } from "../../dist/esm/types.js";
 
 async function main(): Promise<void> {
@@ -34,8 +34,7 @@ async function main(): Promise<void> {
     await storeManager.saveBackend(backend);
 
     // Create an SSH manager instance and connect
-    const sshManager = new SSHStoreManager("./ssh-store.json");
-    await sshManager.connect("your-secure-password");
+    const sshManager = new SSHManager(storeManager);
     const connection = await sshManager.connect(backend.id);
     console.log("Connected successfully!");
 
