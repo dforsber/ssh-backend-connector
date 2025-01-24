@@ -168,40 +168,22 @@ describe("JSONStore", () => {
     });
 
     test("throws error when file size exceeds limit", async () => {
-      // Mock writeFile to capture the data that would be written
-      (writeFile as jest.Mock).mockImplementation((path, data) => {
-        const size = Buffer.byteLength(data, "utf8");
-        if (size > (JSONStore as any).DEFAULT_MAX_FILE_SIZE) {
-          throw new Error(`File size (${size} bytes) exceeds maximum allowed size`);
-        }
-      });
-
-      // Create large object that will exceed default limit
-      const largeData = { value: "x".repeat(201 * 1024 * 1024) }; // 201MB of data
-      await expect(store.set("large", largeData)).rejects.toThrow(/File size .* exceeds maximum/);
-    });
-
-    test("respects custom file size limit", async () => {
-      // Create store with small limit
-      const smallStore = new JSONStore(testPath, 100); // 100 bytes limit
+      // Create store with 50 byte limit
+      const smallStore = new JSONStore(testPath, 50);
       await smallStore.init();
 
-      // Mock writeFile for size checking
-      (writeFile as jest.Mock).mockImplementation((path, data) => {
-        const size = Buffer.byteLength(data, "utf8");
-        if (size > 100) {
-          throw new Error(`File size (${size} bytes) exceeds maximum allowed size (100 bytes)`);
-        }
-      });
+      // Should succeed - small data (under 50 bytes when stringified)
+      await smallStore.set("key", { value: "test" });
 
-      // Should succeed - small data
-      await smallStore.set("small", { value: "test" });
-
-      // Should fail - exceeds 100 bytes
-      const largeData = { value: "x".repeat(100) };
+      // Should fail - data that will exceed 50 bytes when stringified with formatting
+      const largeData = { value: "x".repeat(30) }; // Results in JSON > 50 bytes with formatting
       await expect(smallStore.set("large", largeData)).rejects.toThrow(
-        /File size .* exceeds maximum/
+        /File size .* exceeds maximum allowed size \(50 bytes\)/
       );
+
+      // Verify the actual size that caused the failure
+      const jsonData = JSON.stringify({ ...await smallStore.get("key"), large: largeData }, null, 2);
+      expect(Buffer.byteLength(jsonData, 'utf8')).toBeGreaterThan(50);
     });
   });
 });
