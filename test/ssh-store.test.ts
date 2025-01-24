@@ -126,6 +126,28 @@ describe("SSHStoreManager", () => {
       // Restore the original implementation
       jest.restoreAllMocks();
     });
+
+    test("disconnect cleans up crypto and prevents further operations", async () => {
+      // Setup
+      mockStore.get.mockImplementation(async (key) => {
+        if (key === "crypto.salt") return TEST_SALT;
+        return null;
+      });
+      await manager.connect(TEST_PASSWORD);
+
+      // Spy on crypto.destroy
+      const destroySpy = jest.spyOn(CryptoWrapper.prototype, 'destroy');
+
+      // Act
+      manager.disconnect();
+
+      // Assert
+      expect(destroySpy).toHaveBeenCalled();
+      await expect(manager.getKeyPair("any-id")).rejects.toThrow("Connect ssh store manager first");
+
+      // Cleanup
+      destroySpy.mockRestore();
+    });
   });
 
   describe("keyPair operations", () => {
