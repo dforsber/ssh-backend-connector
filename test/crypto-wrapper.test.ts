@@ -70,4 +70,17 @@ describe("CryptoWrapper", () => {
     const invalidSalt = "tooshort";
     expect(() => new CryptoWrapper(validPassword, invalidSalt)).toThrow("Invalid salt length");
   });
+
+  test("throws error for invalid IV length in decrypt", () => {
+    const invalidIV = "tooShort";
+    const encrypted = `${invalidIV}:encrypted:tag`;
+    expect(() => wrapper.decrypt(encrypted)).toThrow("Invalid IV length");
+  });
+
+  test("throws error for invalid auth tag length in decrypt", () => {
+    const iv = "0123456789abcdef"; // 16 chars = 8 bytes in hex
+    const invalidTag = "tooShort";
+    const encrypted = `${iv}:encrypted:${invalidTag}`;
+    expect(() => wrapper.decrypt(encrypted)).toThrow("Invalid auth tag length");
+  });
 });
