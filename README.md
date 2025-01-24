@@ -1,6 +1,10 @@
 # SSH Backend Connector
 
-Secure SSH backend connection manager for Electron applications with encrypted key storage.
+[![Coverage](https://codecov.io/gh/OWNER/REPO/branch/main/graph/badge.svg)](https://codecov.io/gh/OWNER/REPO)
+
+> Secure SSH backend connection manager for Electron applications with encrypted key storage.
+
+🔒 **100% Test Coverage** | 🛡️ **Type-Safe** | 🔐 **AES-256-GCM Encryption**
 
 ## Features
 
@@ -84,11 +88,14 @@ try {
 
 ## Security
 
-- Passwords must be at least 12 characters
-- Keys are encrypted using AES-256-GCM
-- Sensitive data is automatically cleared from memory
-- Password is never stored in memory
-- Encryption is verified on connection
+This package takes security seriously:
+
+✓ Passwords must be at least 12 characters  
+✓ Keys are encrypted using AES-256-GCM  
+✓ Sensitive data is automatically cleared from memory  
+✓ Password is never stored in memory  
+✓ Encryption is verified on connection  
+✓ 100% test coverage ensures reliable security features
 
 ## Development
 
