@@ -65,4 +65,9 @@ describe("CryptoWrapper", () => {
     const wrapper = new CryptoWrapper(validPassword, existingSalt);
     expect(wrapper.getSalt()).toBe(existingSalt);
   });
+
+  test("throws error for invalid salt length", () => {
+    const invalidSalt = "tooshort";
+    expect(() => new CryptoWrapper(validPassword, invalidSalt)).toThrow("Invalid salt length");
+  });
 });
