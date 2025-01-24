@@ -1,21 +1,24 @@
 import { SSHKeyPair, Backend } from "./types";
-import { CryptoConfig, CryptoWrapper } from "./crypto-wrapper";
+import { CryptoWrapper } from "./crypto-wrapper";
 import { JSONStore } from "./json-store";
 
 export class SSHStoreManager {
   private store: JSONStore;
   private crypto: CryptoWrapper;
 
-  constructor(cryptoConfig: CryptoConfig, storePath = ".ssh-store/data.json") {
+  constructor(storePath = ".ssh-store/data.json") {
     this.store = new JSONStore(storePath);
-    this.crypto = new CryptoWrapper(cryptoConfig);
   }
 
-  public async init(): Promise<void> {
+  public async connect(password: string): Promise<void> {
     await this.store.init();
+    const salt = await this.store.get<string>("crypto.salt");
+    this.crypto = new CryptoWrapper(password, salt);
+    if (!salt) await this.store.set("crypto.salt", this.crypto.getSalt());
   }
 
   async saveKeyPair(keyPair: SSHKeyPair): Promise<void> {
+    if (!this.crypto) throw new Error("Connect ssh store manager first");
     const encrypted = {
       ...keyPair,
       privateKey: this.crypto.encrypt(keyPair.privateKey),
@@ -25,6 +28,7 @@ export class SSHStoreManager {
   }
 
   async getKeyPair(id: string): Promise<SSHKeyPair | null> {
+    if (!this.crypto) throw new Error("Connect ssh store manager first");
     const encrypted = await this.store.get<SSHKeyPair>(`keypairs.${id}`);
     if (!encrypted) return null;
     return {
