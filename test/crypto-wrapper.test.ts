@@ -7,7 +7,7 @@ jest.mock("node:crypto", () => ({
 }));
 
 describe("CryptoWrapper", () => {
-  const validPassword = "test-password-12+";
+  const validPassword = "test-Password-12+";
   let wrapper: CryptoWrapper;
   const mockScryptSync = scryptSync as jest.Mock;
 
