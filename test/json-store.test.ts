@@ -3,7 +3,14 @@ import { JSONStore } from "../src/json-store";
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 
-jest.mock("fs/promises");
+jest.mock("fs/promises", () => ({
+  readFile: jest.fn(),
+  writeFile: jest.fn(),
+  mkdir: jest.fn(),
+  rename: jest.fn(),
+  unlink: jest.fn(),
+  stat: jest.fn().mockResolvedValue({ mode: 0o600 }) // Mock stat to return correct permissions
+}));
 jest.mock("fs", () => ({
   existsSync: jest.fn(),
 }));
