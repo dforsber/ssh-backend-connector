@@ -1,15 +1,13 @@
-import { SSHStoreManager, SSHManager } from "../../dist/esm/index.js";
+import { SSHStoreManager } from "../../dist/esm/index.js";
 import type { Backend } from "../../dist/esm/types.js";
 
 async function main(): Promise<void> {
-  // Initialize the store manager with a custom path
-  const storeManager = new SSHStoreManager("./ssh-store.json");
+  try {
+    // Initialize the store manager with a custom path
+    const storeManager = new SSHStoreManager("./ssh-store.json");
 
-  // Connect with a password
-  await storeManager.connect("your-secure-password");
-
-  // Create an SSH manager instance
-  const sshManager = new SSHManager(storeManager);
+    // Connect with a password
+    await storeManager.connect("your-secure-password");
 
   // Example backend configuration
   const backend: Backend = {
