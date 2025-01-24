@@ -64,28 +64,49 @@ describe("SSHStoreManager", () => {
 
     test("throws error if called without password", async () => {
       await expect(manager.connect("")).rejects.toThrow("Password is required");
+      await expect(manager.connect(undefined as unknown as string)).rejects.toThrow(
+        "Password is required"
+      );
+    });
+
+    test("throws and cleans up if store init fails", async () => {
+      mockStore.init.mockRejectedValue(new Error("Init failed"));
+      await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Init failed");
+
+      // Verify crypto is cleaned up
+      expect(await manager.getKeyPair("any-id").catch((e) => e.message)).toBe(
+        "Connect ssh store manager first"
+      );
     });
 
     test("throws and cleans up if crypto verification fails", async () => {
-      // Mock store to return a salt that will cause crypto verification to fail
+      // Mock crypto verification to fail
       mockStore.get.mockImplementation(async (key) => {
-        if (key === "crypto.salt") return "0".repeat(32); // Invalid salt
+        if (key === "crypto.salt") return TEST_SALT;
         return null;
       });
 
+      // Mock set to simulate crypto test failure
+      mockStore.set.mockImplementation(async (key, value) => {
+        if (key === "test-crypto-verification") {
+          throw new Error("Crypto verification failed");
+        }
+      });
+
       await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Crypto verification failed");
-      
-      // Verify store is in clean state
-      const result = await manager.getKeyPair("any-id").catch(e => e.message);
-      expect(result).toBe("Connect ssh store manager first");
+
+      // Verify crypto is cleaned up
+      expect(await manager.getKeyPair("any-id").catch((e) => e.message)).toBe(
+        "Connect ssh store manager first"
+      );
     });
 
     test("cleans up on general error", async () => {
       mockStore.get.mockRejectedValue(new Error("Store error"));
       await expect(manager.connect(TEST_PASSWORD)).rejects.toThrow("Store error");
-      
+
       // Verify store is in clean state by checking it's not connected
-      const result = await manager.getKeyPair("any-id").catch(e => e.message);
+      const result = await manager.getKeyPair("any-id").catch((e) => e.message);
       expect(result).toBe("Connect ssh store manager first");
     });
   });
