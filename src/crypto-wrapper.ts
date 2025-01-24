@@ -9,6 +9,11 @@ export class CryptoWrapper {
     if (!password || password.length < 12) {
       throw new Error("Password must be at least 12 characters long");
     }
+    
+    // Validate salt length if provided
+    if (existingSalt && Buffer.from(existingSalt, 'hex').length !== 16) {
+      throw new Error("Invalid salt length");
+    }
 
     this.salt = existingSalt || randomBytes(16).toString("hex");
 
@@ -63,8 +68,11 @@ export class CryptoWrapper {
   public decrypt(encryptedData: string): string {
     const [ivHex, encryptedHex, tagHex] = encryptedData.split(":");
     const iv = Buffer.from(ivHex, "hex");
+    if (iv.length !== 16) throw new Error("Invalid IV length");
+    
     const encrypted = Buffer.from(encryptedHex, "hex");
     const tag = Buffer.from(tagHex, "hex");
+    if (tag.length !== 16) throw new Error("Invalid auth tag length");
 
     const decipher = createDecipheriv(this.algorithm, this.key, iv);
     decipher.setAuthTag(tag);

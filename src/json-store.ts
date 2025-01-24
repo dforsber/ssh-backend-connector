@@ -1,14 +1,19 @@
 // store.ts
-import { readFile, writeFile, mkdir } from "fs/promises";
+import { readFile, writeFile, mkdir, rename, unlink } from "fs/promises";
 import { existsSync } from "fs";
-import { dirname } from "path";
+import { dirname, normalize } from "path";
 
 export class JSONStore {
   private data: Record<string, unknown>;
   private filePath: string;
 
   constructor(filePath: string) {
-    this.filePath = filePath;
+    // Prevent path traversal
+    const normalizedPath = path.normalize(filePath);
+    if (normalizedPath.includes('..')) {
+      throw new Error('Invalid file path');
+    }
+    this.filePath = normalizedPath;
     this.data = {};
   }
 
@@ -30,7 +35,23 @@ export class JSONStore {
   }
 
   private async saveStore(): Promise<void> {
-    await writeFile(this.filePath, JSON.stringify(this.data, null, 2));
+    const tmpPath = `${this.filePath}.tmp`;
+    try {
+      // Write to temp file first
+      await writeFile(tmpPath, JSON.stringify(this.data, null, 2), {
+        mode: 0o600, // Secure file permissions
+        flag: 'wx' // Fail if temp file exists
+      });
+      // Atomic rename
+      await rename(tmpPath, this.filePath);
+    } finally {
+      // Clean up temp file if it exists
+      try {
+        await unlink(tmpPath);
+      } catch (err) {
+        // Ignore error if temp file doesn't exist
+      }
+    }
   }
 
   async get<T>(key: string): Promise<T | null> {
