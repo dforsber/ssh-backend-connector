@@ -47,7 +47,13 @@ export class JSONStore {
         throw new Error("Insecure file permissions detected - expected 0600");
       }
     } catch (error) {
-      // Propagate stat errors as file read errors
+      // Only wrap unknown errors as file read errors
+      if (error instanceof Error) {
+        // Propagate permission errors as-is
+        if (error.message.includes("Insecure file permissions")) {
+          throw error;
+        }
+      }
       throw new Error("File read error");
     }
   }
