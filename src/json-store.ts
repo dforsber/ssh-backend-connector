@@ -50,8 +50,12 @@ export class JSONStore {
         throw new Error("Insecure file permissions detected - expected 0600");
       }
     } catch (error) {
-      // Just throw "File read error" without the additional message
-      throw new Error("File read error");
+      // If it's a stat error, let it propagate as is
+      if (error instanceof Error && error.message === "File read error") {
+        throw error;
+      }
+      // For stat operation failures, throw the original error
+      throw error;
     }
   }
 
