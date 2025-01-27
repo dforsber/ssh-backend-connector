@@ -334,6 +334,9 @@ var SSHStoreManager = class {
       throw error;
     }
   }
+  isConnected() {
+    return this.crypto != void 0;
+  }
   disconnect() {
     if (this.crypto) {
       this.crypto.destroy();

@@ -4,6 +4,7 @@ export declare class SSHStoreManager {
     private crypto?;
     constructor(storePath?: string);
     connect(password: string): Promise<void>;
+    isConnected(): boolean;
     disconnect(): void;
     saveKeyPair(keyPair: SSHKeyPair): Promise<void>;
     getKeyPair(id: string): Promise<SSHKeyPair | null>;
