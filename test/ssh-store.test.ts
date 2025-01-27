@@ -43,7 +43,10 @@ describe("SSHStoreManager", () => {
   describe("connect", () => {
     test("initializes store and creates new salt if none exists", async () => {
       mockStore.get.mockResolvedValue(null);
+
+      expect(manager.isConnected()).toEqual(false);
       await manager.connect(TEST_PASSWORD);
+      expect(manager.isConnected()).toEqual(true);
 
       expect(mockStore.init).toHaveBeenCalled();
       expect(mockStore.get).toHaveBeenCalledWith("crypto.salt");

@@ -182,9 +182,9 @@ describe("JSONStore", () => {
       );
 
       // Verify the actual size that caused the failure
-      const existingData = await smallStore.get("key") as Record<string, unknown>;
+      const existingData = (await smallStore.get("key")) as Record<string, unknown>;
       const jsonData = JSON.stringify({ ...existingData, large: largeData }, null, 2);
-      expect(Buffer.byteLength(jsonData, 'utf8')).toBeGreaterThan(50);
+      expect(Buffer.byteLength(jsonData, "utf8")).toBeGreaterThan(50);
     });
   });
 });

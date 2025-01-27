@@ -36,6 +36,10 @@ export class SSHStoreManager {
     }
   }
 
+  public isConnected(): boolean {
+    return this.crypto != undefined;
+  }
+
   public disconnect(): void {
     if (this.crypto) {
       this.crypto.destroy();
