@@ -35,12 +35,14 @@ var SSHManager = class {
   connectionTimeout;
   maxConcurrentConnections;
   connectionAttempts;
+  tunnelConfigs = [];
   constructor(store, config) {
     this.store = store;
     this.connections = /* @__PURE__ */ new Map();
     this.connectionAttempts = /* @__PURE__ */ new Map();
     this.connectionTimeout = config?.connectionTimeout ?? 3e4;
     this.maxConcurrentConnections = config?.maxConcurrentConnections ?? 10;
+    this.tunnelConfigs = config?.tunnelConfigs ?? [];
   }
   checkRateLimit(backendId) {
     const now = Date.now();
@@ -76,8 +78,9 @@ var SSHManager = class {
         conn.end();
         reject(new Error(`Connection timeout after ${this.connectionTimeout}ms`));
       }, this.connectionTimeout);
-      conn.on("ready", () => {
+      conn.on("ready", async () => {
         clearTimeout(timeoutId);
+        await this.setupTunnels(conn, backend.host).catch((err) => reject(err));
         this.connections.set(backendId, conn);
         resolve(conn);
       }).on("error", (err) => {
@@ -90,26 +93,24 @@ var SSHManager = class {
       });
     });
   }
-  async setupTunnel(backendId, config) {
-    const conn = this.connections.get(backendId);
-    if (!conn) throw new Error("Not connected");
-    const { remotePort, localPort, remoteHost = "127.0.0.1" } = config;
-    return new Promise((resolve, reject) => {
-      try {
-        conn.forwardIn(remoteHost, remotePort, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            conn.forwardOut("127.0.0.1", localPort, remoteHost, remotePort, (err2, channel) => {
-              if (err2) reject(err2);
-              else resolve(channel);
-            });
-          }
-        });
-      } catch (err) {
-        reject(err);
-      }
-    });
+  async setupTunnels(conn, backendHost) {
+    try {
+      return await Promise.all(
+        this.tunnelConfigs.map(
+          (config) => new Promise((resolve, reject) => {
+            conn.forwardOut(
+              "127.0.0.1",
+              config.localPort,
+              backendHost,
+              config.remotePort,
+              (err, channel) => err ? reject(err) : resolve(channel)
+            );
+          })
+        )
+      );
+    } catch (err) {
+      throw err;
+    }
   }
   disconnect(backendId) {
     const conn = this.connections.get(backendId);

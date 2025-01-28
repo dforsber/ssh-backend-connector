@@ -15,8 +15,13 @@ export interface Backend {
     username: string;
     keyPairId: string;
 }
+export interface TunnelConfig {
+    remotePort: number;
+    localPort: number;
+}
 export interface SSHManagerConfig {
     connectionTimeout?: number;
     maxConcurrentConnections?: number;
+    tunnelConfigs?: TunnelConfig[];
 }
 //# sourceMappingURL=types.d.ts.map
