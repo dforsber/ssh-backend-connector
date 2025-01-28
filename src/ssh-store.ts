@@ -51,7 +51,7 @@ export class SSHStoreManager {
     if (!this.crypto) throw new Error("Connect ssh store manager first");
 
     // Validate key pair
-    if (!keyPair.id || !keyPair.privateKey || !keyPair.publicKey) {
+    if (!keyPair.id || !keyPair.privateKey) {
       throw new Error("Invalid key pair data");
     }
     if (!/^[a-zA-Z0-9-_]+$/.test(keyPair.id)) {
@@ -61,7 +61,6 @@ export class SSHStoreManager {
     const encrypted = {
       ...keyPair,
       privateKey: this.crypto.encrypt(keyPair.privateKey),
-      publicKey: this.crypto.encrypt(keyPair.publicKey),
     };
     await this.store.set(`keypairs.${keyPair.id}`, encrypted);
   }
@@ -73,7 +72,6 @@ export class SSHStoreManager {
     return {
       id,
       privateKey: this.crypto.decrypt(encrypted.privateKey),
-      publicKey: this.crypto.decrypt(encrypted.publicKey),
     };
   }
 

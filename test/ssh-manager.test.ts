@@ -27,7 +27,6 @@ describe("SSHManager", () => {
     id: "key1",
     name: "Test Key",
     privateKey: "private-key-content",
-    publicKey: "public-key-content",
   };
 
   beforeEach(() => {

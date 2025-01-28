@@ -6,7 +6,6 @@ export interface StoreSchema {
 export interface SSHKeyPair {
   id: string;
   privateKey: string;
-  publicKey: string;
   name?: string;
 }
 

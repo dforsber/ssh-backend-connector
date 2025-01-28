@@ -13,8 +13,14 @@ describe("SSHStoreManager", () => {
 
   const mockKeyPair: SSHKeyPair = {
     id: "key1",
-    privateKey: "private-key-content",
-    publicKey: "public-key-content",
+    privateKey: `-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACBeONPaYYkefN2irC6KuohU3EMhIEJccLd0JPzZ5MskFAAAAKA+k3eEPpN3
+hAAAAAtzc2gtZWQyNTUxOQAAACBeONPaYYkefN2irC6KuohU3EMhIEJccLd0JPzZ5MskFA
+AAAEDORq9wsiFPEToA/ttLvn7Z/8i0WRigCYOaUCs9hgVRCF4409phiR583aKsLoq6iFTc
+QyEgQlxwt3Qk/NnkyyQUAAAAGmRmb3JzYmVyQE1hY0Jvb2stUHJvLmxvY2FsAQID
+-----END OPENSSH PRIVATE KEY-----
+`,
   };
 
   const mockBackend: Backend = {
@@ -174,7 +180,6 @@ describe("SSHStoreManager", () => {
         expect.objectContaining({
           id: mockKeyPair.id,
           privateKey: expect.any(String),
-          publicKey: expect.any(String),
         })
       );
     });
