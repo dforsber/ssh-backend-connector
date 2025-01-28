@@ -32,7 +32,6 @@ await store.saveKeyPair({
   id: "prod-key",
   name: "Production Server",
   privateKey: "-----BEGIN RSA PRIVATE KEY-----...",
-  publicKey: "ssh-rsa AAAA...",
 });
 
 // Store backend config
