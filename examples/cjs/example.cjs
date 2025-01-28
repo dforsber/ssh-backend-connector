@@ -27,7 +27,6 @@ async function main() {
     const keyPair = {
       id: "key1",
       privateKey: testKeys.privateKey,
-      publicKey: testKeys.publicKey,
       name: "Example Key",
     };
     await storeManager.saveKeyPair(keyPair);
