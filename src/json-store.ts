@@ -66,15 +66,12 @@ export class JSONStore {
   private async loadStore(): Promise<Record<string, unknown>> {
     if (!existsSync(this.filePath)) {
       const dir = dirname(this.filePath);
-      if (!existsSync(dir)) {
-        await mkdir(dir, { recursive: true });
-      }
-      await writeFile(this.filePath, "{}");
-      return {};
+      if (!existsSync(dir)) await mkdir(dir, { recursive: true });
+      await writeFile(this.filePath, "{}", { mode: 0o600 });
     }
     await this.verifyFilePermissions(this.filePath);
     const content = await readFile(this.filePath, "utf-8");
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(content.toString());
     if (typeof parsed !== "object" || parsed === null) {
       throw new Error("Invalid store format");
     }

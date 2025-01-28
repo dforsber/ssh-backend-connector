@@ -81,10 +81,13 @@ describe("JSONStore", () => {
     });
 
     test("creates new store file if it doesn't exist", async () => {
-      (existsSync as jest.Mock).mockReturnValue(false);
+      (existsSync as jest.Mock).mockReturnValueOnce(false);
+      (existsSync as jest.Mock).mockReturnValueOnce(false);
+      (readFile as jest.Mock).mockReturnValueOnce(Buffer.from("{}"));
+      (stat as jest.Mock).mockReturnValueOnce({ mode: 0o600 });
       await store.init();
       expect(mkdir).toHaveBeenCalledWith(expect.any(String), { recursive: true });
-      expect(writeFile).toHaveBeenCalledWith(testPath, "{}");
+      expect(writeFile).toHaveBeenCalledWith(testPath, "{}", { mode: 0o600 });
     });
 
     test("handles directory creation error", async () => {
