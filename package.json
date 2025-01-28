@@ -1,6 +1,6 @@
 {
   "name": "ssh-backend-connector",
-  "version": "0.5.15",
+  "version": "0.5.16",
   "author": "Dan Forsberg <dforsber@gmail.com>",
   "license": "MIT",
   "main": "./dist/cjs/index.js",
