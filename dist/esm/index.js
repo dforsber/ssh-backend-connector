@@ -316,7 +316,7 @@ var SSHStoreManager = class {
   }
   async saveKeyPair(keyPair) {
     if (!this.crypto) throw new Error("Connect ssh store manager first");
-    if (!keyPair.id || !keyPair.privateKey || !keyPair.publicKey) {
+    if (!keyPair.id || !keyPair.privateKey) {
       throw new Error("Invalid key pair data");
     }
     if (!/^[a-zA-Z0-9-_]+$/.test(keyPair.id)) {
@@ -324,8 +324,7 @@ var SSHStoreManager = class {
     }
     const encrypted = {
       ...keyPair,
-      privateKey: this.crypto.encrypt(keyPair.privateKey),
-      publicKey: this.crypto.encrypt(keyPair.publicKey)
+      privateKey: this.crypto.encrypt(keyPair.privateKey)
     };
     await this.store.set(`keypairs.${keyPair.id}`, encrypted);
   }
@@ -335,8 +334,7 @@ var SSHStoreManager = class {
     if (!encrypted) return null;
     return {
       id,
-      privateKey: this.crypto.decrypt(encrypted.privateKey),
-      publicKey: this.crypto.decrypt(encrypted.publicKey)
+      privateKey: this.crypto.decrypt(encrypted.privateKey)
     };
   }
   // Update other methods to be async
