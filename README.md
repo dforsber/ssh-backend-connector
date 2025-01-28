@@ -42,17 +42,11 @@ await store.saveBackend({
   port: 22,
   username: "admin",
   keyPairId: "prod-key",
+  tunnels: [{ localPort: 1234, remotePort: 4321 }],
 });
 
 // Create SSH manager with the store
-const ssh = new SSHManager(store, {
-  tunnelConfigs: [
-    {
-      localPort: 1234,
-      remotePort: 4321,
-    },
-  ],
-});
+const ssh = new SSHManager(store);
 
 // Connect and setup tunnel
 await ssh.connect("prod");

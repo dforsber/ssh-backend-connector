@@ -16,15 +16,15 @@ export interface Backend {
   port: number;
   username: string;
   keyPairId: string;
+  tunnels?: TunnelConfig[];
 }
 
 export interface TunnelConfig {
-  remotePort: number;
   localPort: number;
+  remotePort: number;
 }
 
 export interface SSHManagerConfig {
   connectionTimeout?: number; // Connection timeout in milliseconds
   maxConcurrentConnections?: number; // Maximum number of concurrent connections
-  tunnelConfigs?: TunnelConfig[];
 }

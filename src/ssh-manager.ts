@@ -10,7 +10,6 @@ export class SSHManager {
   private readonly connectionTimeout: number;
   private readonly maxConcurrentConnections: number;
   private connectionAttempts: Map<string, { count: number; lastAttempt: number }>;
-  private tunnelConfigs: TunnelConfig[] = [];
 
   constructor(store: SSHStoreManager, config?: SSHManagerConfig) {
     this.store = store;
@@ -18,7 +17,6 @@ export class SSHManager {
     this.connectionAttempts = new Map();
     this.connectionTimeout = config?.connectionTimeout ?? 30000; // Default 30 seconds
     this.maxConcurrentConnections = config?.maxConcurrentConnections ?? 10; // Default 10 connections
-    this.tunnelConfigs = config?.tunnelConfigs ?? [];
   }
 
   private checkRateLimit(backendId: string): void {
@@ -69,7 +67,9 @@ export class SSHManager {
       conn
         .on("ready", async () => {
           clearTimeout(timeoutId);
-          await this.setupTunnels(conn, backend.host).catch((err) => reject(err));
+          await this.setupTunnels(conn, backend.host, backend.tunnels ?? []).catch((err) =>
+            reject(err)
+          );
           this.connections.set(backendId, conn);
           resolve(conn);
         })
@@ -85,10 +85,14 @@ export class SSHManager {
     });
   }
 
-  private async setupTunnels(conn: Client, backendHost: string): Promise<ClientChannel[]> {
+  private async setupTunnels(
+    conn: Client,
+    backendHost: string,
+    tunnelConfigs: TunnelConfig[]
+  ): Promise<ClientChannel[]> {
     try {
       return await Promise.all(
-        this.tunnelConfigs.map(
+        tunnelConfigs.map(
           (config) =>
             new Promise<ClientChannel>((resolve, reject) => {
               conn.forwardOut(

@@ -75,16 +75,17 @@ describe("SSHManager", () => {
         return this;
       };
 
-      manager = new SSHManager(mockStoreManager, {
-        tunnelConfigs: [
+      manager = new SSHManager(mockStoreManager);
+
+      mockStoreManager.getBackend.mockResolvedValue({
+        ...mockBackend,
+        tunnels: [
           {
             localPort: 1234,
             remotePort: 4321,
           },
         ],
       });
-
-      mockStoreManager.getBackend.mockResolvedValue(mockBackend);
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
 
       const conn = await manager.connect(mockBackend.id);
@@ -105,16 +106,17 @@ describe("SSHManager", () => {
         return this;
       };
 
-      manager = new SSHManager(mockStoreManager, {
-        tunnelConfigs: [
+      manager = new SSHManager(mockStoreManager);
+
+      mockStoreManager.getBackend.mockResolvedValue({
+        ...mockBackend,
+        tunnels: [
           {
             localPort: 1234,
             remotePort: 4321,
           },
         ],
       });
-
-      mockStoreManager.getBackend.mockResolvedValue(mockBackend);
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
       await expect(manager.connect(mockBackend.id)).rejects.toThrow();
     });
@@ -157,7 +159,6 @@ describe("SSHManager", () => {
       // Create manager with short timeout
       const managerWithTimeout = new SSHManager(mockStoreManager, {
         connectionTimeout: 100, // 100ms timeout
-        tunnelConfigs: [],
       });
 
       await expect(managerWithTimeout.connect(mockBackend.id)).rejects.toThrow(
@@ -176,7 +177,6 @@ describe("SSHManager", () => {
       // Create manager with max 1 connection
       const managerWithLimit = new SSHManager(mockStoreManager, {
         maxConcurrentConnections: 1,
-        tunnelConfigs: [],
       });
 
       // First connection should succeed
