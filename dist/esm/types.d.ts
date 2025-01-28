@@ -14,14 +14,14 @@ export interface Backend {
     port: number;
     username: string;
     keyPairId: string;
+    tunnels?: TunnelConfig[];
 }
 export interface TunnelConfig {
-    remotePort: number;
     localPort: number;
+    remotePort: number;
 }
 export interface SSHManagerConfig {
     connectionTimeout?: number;
     maxConcurrentConnections?: number;
-    tunnelConfigs?: TunnelConfig[];
 }
 //# sourceMappingURL=types.d.ts.map

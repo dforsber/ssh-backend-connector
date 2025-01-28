@@ -9,14 +9,12 @@ var SSHManager = class {
   connectionTimeout;
   maxConcurrentConnections;
   connectionAttempts;
-  tunnelConfigs = [];
   constructor(store, config) {
     this.store = store;
     this.connections = /* @__PURE__ */ new Map();
     this.connectionAttempts = /* @__PURE__ */ new Map();
     this.connectionTimeout = config?.connectionTimeout ?? 3e4;
     this.maxConcurrentConnections = config?.maxConcurrentConnections ?? 10;
-    this.tunnelConfigs = config?.tunnelConfigs ?? [];
   }
   checkRateLimit(backendId) {
     const now = Date.now();
@@ -54,7 +52,9 @@ var SSHManager = class {
       }, this.connectionTimeout);
       conn.on("ready", async () => {
         clearTimeout(timeoutId);
-        await this.setupTunnels(conn, backend.host).catch((err) => reject(err));
+        await this.setupTunnels(conn, backend.host, backend.tunnels ?? []).catch(
+          (err) => reject(err)
+        );
         this.connections.set(backendId, conn);
         resolve(conn);
       }).on("error", (err) => {
@@ -67,10 +67,10 @@ var SSHManager = class {
       });
     });
   }
-  async setupTunnels(conn, backendHost) {
+  async setupTunnels(conn, backendHost, tunnelConfigs) {
     try {
       return await Promise.all(
-        this.tunnelConfigs.map(
+        tunnelConfigs.map(
           (config) => new Promise((resolve, reject) => {
             conn.forwardOut(
               "127.0.0.1",

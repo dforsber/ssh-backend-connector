@@ -9,7 +9,6 @@ export declare class SSHManager {
     private readonly connectionTimeout;
     private readonly maxConcurrentConnections;
     private connectionAttempts;
-    private tunnelConfigs;
     constructor(store: SSHStoreManager, config?: SSHManagerConfig);
     private checkRateLimit;
     connect(backendId: string): Promise<Client>;
