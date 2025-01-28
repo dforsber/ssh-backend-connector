@@ -1,12 +1,6 @@
 import { Client, ClientChannel } from "ssh2";
 import { SSHStoreManager } from "./ssh-store";
-import { SSHManagerConfig } from "./types";
-
-export interface TunnelConfig {
-  remotePort: number;
-  localPort: number;
-  remoteHost?: string;
-}
+import { SSHManagerConfig, TunnelConfig } from "./types";
 
 export class SSHManager {
   private store: SSHStoreManager;
@@ -16,6 +10,7 @@ export class SSHManager {
   private readonly connectionTimeout: number;
   private readonly maxConcurrentConnections: number;
   private connectionAttempts: Map<string, { count: number; lastAttempt: number }>;
+  private tunnelConfigs: TunnelConfig[] = [];
 
   constructor(store: SSHStoreManager, config?: SSHManagerConfig) {
     this.store = store;
@@ -23,6 +18,7 @@ export class SSHManager {
     this.connectionAttempts = new Map();
     this.connectionTimeout = config?.connectionTimeout ?? 30000; // Default 30 seconds
     this.maxConcurrentConnections = config?.maxConcurrentConnections ?? 10; // Default 10 connections
+    this.tunnelConfigs = config?.tunnelConfigs ?? [];
   }
 
   private checkRateLimit(backendId: string): void {
@@ -71,8 +67,9 @@ export class SSHManager {
         reject(new Error(`Connection timeout after ${this.connectionTimeout}ms`));
       }, this.connectionTimeout);
       conn
-        .on("ready", () => {
+        .on("ready", async () => {
           clearTimeout(timeoutId);
+          await this.setupTunnels(conn, backend.host).catch((err) => reject(err));
           this.connections.set(backendId, conn);
           resolve(conn);
         })
@@ -88,28 +85,26 @@ export class SSHManager {
     });
   }
 
-  async setupTunnel(backendId: string, config: TunnelConfig): Promise<ClientChannel> {
-    const conn = this.connections.get(backendId);
-    if (!conn) throw new Error("Not connected");
-
-    const { remotePort, localPort, remoteHost = "127.0.0.1" } = config;
-
-    return new Promise((resolve, reject) => {
-      try {
-        conn.forwardIn(remoteHost, remotePort, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            conn.forwardOut("127.0.0.1", localPort, remoteHost, remotePort, (err, channel) => {
-              if (err) reject(err);
-              else resolve(channel);
-            });
-          }
-        });
-      } catch (err) {
-        reject(err);
-      }
-    });
+  private async setupTunnels(conn: Client, backendHost: string): Promise<ClientChannel[]> {
+    try {
+      return await Promise.all(
+        this.tunnelConfigs.map(
+          (config) =>
+            new Promise<ClientChannel>((resolve, reject) => {
+              conn.forwardOut(
+                "127.0.0.1",
+                config.localPort,
+                backendHost,
+                config.remotePort,
+                (err, channel) => (err ? reject(err) : resolve(channel))
+              );
+            })
+        )
+      );
+    } catch (err) {
+      //console.error(err);
+      throw err;
+    }
   }
 
   disconnect(backendId: string): void {

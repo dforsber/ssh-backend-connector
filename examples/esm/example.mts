@@ -35,17 +35,19 @@ async function main(): Promise<void> {
 
     // Create an SSH manager instance with custom configuration
     const sshManager = new SSHManager(storeManager, {
-      connectionTimeout: 20000,        // 20 seconds
-      maxConcurrentConnections: 5      // Maximum 5 concurrent connections
+      connectionTimeout: 20000, // 20 seconds
+      maxConcurrentConnections: 5, // Maximum 5 concurrent connections
     });
     const connection = await sshManager.connect(backend.id);
     console.log("Connected successfully!");
 
     // Setup a tunnel
-    await sshManager.setupTunnel(backend.id, {
-      remotePort: 5432,
-      localPort: 54320,
-    });
+    await sshManager.setupTunnel(backend.id, [
+      {
+        remotePort: 5432,
+        localPort: 54320,
+      },
+    ]);
 
     // Cleanup
     sshManager.disconnect(backend.id);

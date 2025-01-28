@@ -1,7 +1,7 @@
 // ssh-manager.test.ts
 import { SSHManager } from "../src/ssh-manager";
 import { SSHStoreManager } from "../src/ssh-store";
-import { Client } from "ssh2";
+import { Client, ClientChannel } from "ssh2";
 import { Backend, SSHKeyPair } from "../src/types";
 
 const pw = "dummyPwLongerAndLongerAndLonger123";
@@ -68,6 +68,57 @@ describe("SSHManager", () => {
       });
     });
 
+    test("creates SSH connection successfully - with tunnel", async () => {
+      // @ts-expect-error
+      mockClient.forwardOut = function (_a, _b, _c, _d, cb) {
+        if (cb) cb(undefined, <ClientChannel>{});
+        return this;
+      };
+
+      manager = new SSHManager(mockStoreManager, {
+        tunnelConfigs: [
+          {
+            localPort: 1234,
+            remotePort: 4321,
+          },
+        ],
+      });
+
+      mockStoreManager.getBackend.mockResolvedValue(mockBackend);
+      mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
+
+      const conn = await manager.connect(mockBackend.id);
+
+      expect(conn).toBe(mockClient);
+      expect(mockClient.connect).toHaveBeenCalledWith({
+        host: mockBackend.host,
+        port: mockBackend.port,
+        username: mockBackend.username,
+        privateKey: mockKeyPair.privateKey,
+      });
+    });
+
+    test("does not create SSH connection due to tunnel error", async () => {
+      // @ts-expect-error
+      mockClient.forwardOut = function (_a, _b, _c, _d, cb) {
+        if (cb) cb(new Error("Test error"), <ClientChannel>{});
+        return this;
+      };
+
+      manager = new SSHManager(mockStoreManager, {
+        tunnelConfigs: [
+          {
+            localPort: 1234,
+            remotePort: 4321,
+          },
+        ],
+      });
+
+      mockStoreManager.getBackend.mockResolvedValue(mockBackend);
+      mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
+      await expect(manager.connect(mockBackend.id)).rejects.toThrow();
+    });
+
     test("throws when backend not found", async () => {
       mockStoreManager.getBackend.mockResolvedValue(null);
       await expect(manager.connect("nonexistent")).rejects.toThrow("Backend not found");
@@ -106,6 +157,7 @@ describe("SSHManager", () => {
       // Create manager with short timeout
       const managerWithTimeout = new SSHManager(mockStoreManager, {
         connectionTimeout: 100, // 100ms timeout
+        tunnelConfigs: [],
       });
 
       await expect(managerWithTimeout.connect(mockBackend.id)).rejects.toThrow(
@@ -124,6 +176,7 @@ describe("SSHManager", () => {
       // Create manager with max 1 connection
       const managerWithLimit = new SSHManager(mockStoreManager, {
         maxConcurrentConnections: 1,
+        tunnelConfigs: [],
       });
 
       // First connection should succeed
@@ -195,82 +248,6 @@ describe("SSHManager", () => {
       const attempts = manager["connectionAttempts"].get(backendId);
       expect(attempts?.count).toBe(2);
       expect(attempts?.lastAttempt).toBeGreaterThan(recentTime);
-    });
-  });
-
-  describe("setupTunnel", () => {
-    const tunnelConfig = {
-      remotePort: 3000,
-      localPort: 8080,
-    };
-
-    test("creates tunnel successfully", async () => {
-      const mockChannel = {} as any;
-      manager["connections"].set(mockBackend.id, mockClient);
-
-      mockClient.forwardIn.mockImplementation((_host, _port, callback) => {
-        if (callback) callback(undefined, _port);
-        return mockClient;
-      });
-
-      mockClient.forwardOut.mockImplementation(
-        (_localHost, _localPort, _remoteHost, _remotePort, callback) => {
-          if (callback) callback(undefined, mockChannel);
-          return mockClient;
-        }
-      );
-
-      const channel = await manager.setupTunnel(mockBackend.id, tunnelConfig);
-      expect(channel).toBe(mockChannel);
-    });
-
-    test("throws when not connected", async () => {
-      await expect(manager.setupTunnel("nonexistent", tunnelConfig)).rejects.toThrow(
-        "Not connected"
-      );
-    });
-
-    test("handles forwardIn error", async () => {
-      manager["connections"].set(mockBackend.id, mockClient);
-      mockClient.forwardIn.mockImplementation((_host, _port, callback) => {
-        if (callback) callback(new Error("Forward failed"), _port);
-        return mockClient;
-      });
-
-      await expect(manager.setupTunnel(mockBackend.id, tunnelConfig)).rejects.toThrow(
-        "Forward failed"
-      );
-    });
-
-    test("handles forwardOut error", async () => {
-      const mockChannel = {} as any;
-      manager["connections"].set(mockBackend.id, mockClient);
-      mockClient.forwardIn.mockImplementation((_host, _port, callback) => {
-        if (callback) callback(undefined, _port);
-        return mockClient;
-      });
-
-      mockClient.forwardOut.mockImplementation(
-        (_localHost, _localPort, _remoteHost, _remotePort, callback) => {
-          if (callback) callback(new Error("Forward out failed"), mockChannel);
-          return mockClient;
-        }
-      );
-
-      await expect(manager.setupTunnel(mockBackend.id, tunnelConfig)).rejects.toThrow(
-        "Forward out failed"
-      );
-    });
-
-    test("handles general tunnel setup error", async () => {
-      manager["connections"].set(mockBackend.id, mockClient);
-      mockClient.forwardIn.mockImplementation(() => {
-        throw new Error("General tunnel error");
-      });
-
-      await expect(manager.setupTunnel(mockBackend.id, tunnelConfig)).rejects.toThrow(
-        "General tunnel error"
-      );
     });
   });
 

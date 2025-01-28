@@ -45,14 +45,17 @@ await store.saveBackend({
 });
 
 // Create SSH manager with the store
-const ssh = new SSHManager(store);
+const ssh = new SSHManager(store, {
+  tunnelConfigs: [
+    {
+      localPort: 1234,
+      remotePort: 4321,
+    },
+  ],
+});
 
 // Connect and setup tunnel
 await ssh.connect("prod");
-await ssh.setupTunnel("prod", {
-  remotePort: 3000,
-  localPort: 8080,
-});
 
 // When done, cleanup
 ssh.disconnect("prod");
@@ -78,7 +81,6 @@ store.disconnect(); // Clears sensitive data from memory
 
 - `constructor(store: SSHStoreManager)`: Create manager with store
 - `connect(backendId: string)`: Establish SSH connection
-- `setupTunnel(backendId: string, config: TunnelConfig)`: Create SSH tunnel
 - `disconnect(backendId: string)`: Close connection
 
 ## Security

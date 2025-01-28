@@ -11,6 +11,10 @@ async function main() {
   const sshManager = new SSHManager(storeManager);
 
   // Example backend configuration
+  const portForwarding = {
+    remotePort: 5432,
+    localPort: 54320,
+  };
   const backend = {
     id: "example-server",
     name: "Example Server",
@@ -18,6 +22,7 @@ async function main() {
     port: 22,
     username: "user",
     keyPairId: "key1",
+    data: JSON.stringify(portForwarding),
   };
 
   try {
@@ -39,10 +44,7 @@ async function main() {
     console.log("Connected successfully!");
 
     // Setup a tunnel
-    await sshManager.setupTunnel(backend.id, {
-      remotePort: 5432,
-      localPort: 54320,
-    });
+    await sshManager.setupTunnel(backend.id, [portForwarding]);
 
     // Cleanup
     sshManager.disconnect(backend.id);
