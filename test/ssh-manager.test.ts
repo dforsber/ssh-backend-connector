@@ -73,9 +73,16 @@ describe("SSHManager", () => {
     });
 
     test("creates SSH connection successfully - with tunnel", async () => {
+      const mockStream = new Socket();
+      const mockClientSocket = new Socket();
+      
+      // Mock stream data events for verification
+      const streamDataSpy = jest.spyOn(mockStream, 'pipe');
+      const socketDataSpy = jest.spyOn(mockClientSocket, 'pipe');
+
       // @ts-expect-error
       mockClient.forwardOut = function (_a, _b, _c, _d, cb) {
-        if (cb) cb(undefined, <ClientChannel>{});
+        if (cb) cb(undefined, mockStream);
         return this;
       };
 
@@ -92,6 +99,30 @@ describe("SSHManager", () => {
       });
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
 
+      // Create a mock server event handler
+      const serverConnection = jest.fn((socket) => {
+        expect(socket).toBeInstanceOf(Socket);
+        // Simulate client connection
+        socket.emit('connection', mockClientSocket);
+      });
+
+      // Mock createServer
+      const mockServer = {
+        listen: jest.fn((port, cb) => {
+          expect(port).toBe(11234);
+          if (cb) cb();
+          return mockServer;
+        }),
+        on: jest.fn((event, handler) => {
+          if (event === 'connection') {
+            serverConnection(handler);
+          }
+          return mockServer;
+        }),
+      };
+
+      jest.spyOn(require('node:net'), 'createServer').mockImplementation(() => mockServer);
+
       const conn = await manager.connect(mockBackend.id);
 
       expect(conn).toBe(mockClient);
@@ -101,7 +132,20 @@ describe("SSHManager", () => {
         username: mockBackend.username,
         privateKey: mockKeyPair.privateKey,
       });
+
+      // Verify stream piping
+      expect(streamDataSpy).toHaveBeenCalled();
+      expect(socketDataSpy).toHaveBeenCalled();
+      
+      // Verify server setup
+      expect(mockServer.listen).toHaveBeenCalledWith(11234, expect.any(Function));
+
       manager.disconnectAll();
+      
+      // Clean up
+      streamDataSpy.mockRestore();
+      socketDataSpy.mockRestore();
+      jest.restoreAllMocks();
     });
 
     test("does not create SSH connection due to tunnel error", async () => {
