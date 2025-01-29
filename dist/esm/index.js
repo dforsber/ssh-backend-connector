@@ -3,9 +3,8 @@ import { Client } from "ssh2";
 import { createServer } from "node:net";
 var SSHManager = class {
   store;
-  maxConnectionAttempts = 3;
-  attemptResetTimeMs = 3e5;
-  // 5 minutes
+  maxConnectionAttempts;
+  attemptResetTimeMs;
   connectionTimeout;
   maxConcurrentConnections;
   connectionAttempts;
@@ -17,6 +16,8 @@ var SSHManager = class {
     this.connectionAttempts = /* @__PURE__ */ new Map();
     this.connectionTimeout = config?.connectionTimeout ?? 3e4;
     this.maxConcurrentConnections = config?.maxConcurrentConnections ?? 10;
+    this.maxConnectionAttempts = config?.maxConnectionAttempts ?? 5;
+    this.attemptResetTimeMs = config?.attemptResetTimeMs ?? 1e4;
   }
   checkRateLimit(backendId) {
     const now = Date.now();

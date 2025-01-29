@@ -23,5 +23,7 @@ export interface TunnelConfig {
 export interface SSHManagerConfig {
     connectionTimeout?: number;
     maxConcurrentConnections?: number;
+    maxConnectionAttempts?: number;
+    attemptResetTimeMs?: number;
 }
 //# sourceMappingURL=types.d.ts.map
