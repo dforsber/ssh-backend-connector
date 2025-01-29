@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.22](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.21...v0.5.22) (2025-01-29)
+
+
+### Features
+
+* Add comprehensive test for SSH tunnel stream piping and server setup ([948c87d](https://github.com/dforsber/ssh-backend-connector/commit/948c87d86d8175f437b29d30ddebeec98d995655))
+
+
+### Bug Fixes
+
+* Add type annotation to net.createServer mock handler in test ([a0cf3ff](https://github.com/dforsber/ssh-backend-connector/commit/a0cf3ff0464723a89905c837295baaa98c84ab62))
+* Correct ClientChannel type in SSH manager test mocks ([3f291a5](https://github.com/dforsber/ssh-backend-connector/commit/3f291a5704934bcf690015de4308b7c184c003a1))
+* Handle socket connection error in SSH tunnel test ([bd6dfe3](https://github.com/dforsber/ssh-backend-connector/commit/bd6dfe354d16651e227fe559e7e364f0d1600534))
+* Handle SSH tunnel errors and properly clean up connections ([bb7b89d](https://github.com/dforsber/ssh-backend-connector/commit/bb7b89dc43c11349badf7b87c69ccfe783b4f6a6))
+* Handle SSH tunnel setup errors correctly in connection process ([11fa7a1](https://github.com/dforsber/ssh-backend-connector/commit/11fa7a1eb30d5807e689d6bff4a889fd0c0a8499))
+* Handle SSH tunnel setup failure and improve error handling ([4768550](https://github.com/dforsber/ssh-backend-connector/commit/47685500c408065a2b8fa05b64a0f7c503fdc972))
+* Improve SSH tunnel error handling in connection test ([2f41d5e](https://github.com/dforsber/ssh-backend-connector/commit/2f41d5e94620664f889003afab52a3e0233677af))
+* Remove redundant server creation code in SSH tunnel setup ([9fca6ef](https://github.com/dforsber/ssh-backend-connector/commit/9fca6efe9a4be9296add23f6686d3c6bf2dbf48f))
+* Restore mockClient.forwardOut after test to prevent side effects ([0af46c6](https://github.com/dforsber/ssh-backend-connector/commit/0af46c6bcb7a23c91f0cecbabb7933fe1974f89e))
+
 ### [0.5.21](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.20...v0.5.21) (2025-01-29)
 
 ### [0.5.20](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.19...v0.5.20) (2025-01-28)

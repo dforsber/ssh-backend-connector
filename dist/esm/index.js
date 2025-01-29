@@ -1,14 +1,16 @@
 // src/ssh-manager.ts
 import { Client } from "ssh2";
+import { createServer } from "node:net";
 var SSHManager = class {
   store;
-  connections;
   maxConnectionAttempts = 3;
   attemptResetTimeMs = 3e5;
   // 5 minutes
   connectionTimeout;
   maxConcurrentConnections;
   connectionAttempts;
+  connections = /* @__PURE__ */ new Map();
+  listeningServers = /* @__PURE__ */ new Map();
   constructor(store, config) {
     this.store = store;
     this.connections = /* @__PURE__ */ new Map();
@@ -50,6 +52,7 @@ var SSHManager = class {
       port: backend.port,
       username: backend.username,
       privateKey: keyPair.privateKey
+      // debug: (m) => console.log(m),
     };
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
@@ -58,33 +61,63 @@ var SSHManager = class {
       }, this.connectionTimeout);
       conn.on("ready", async () => {
         clearTimeout(timeoutId);
-        await this.setupTunnels(conn, backend.host, backend.tunnels ?? []).catch(
-          (err) => reject(err)
-        );
-        this.connections.set(backendId, conn);
-        resolve(conn);
+        try {
+          await this.setupTunnels(conn, backend.id, backend.host, backend.tunnels ?? []);
+          this.connections.set(backendId, conn);
+          resolve(conn);
+        } catch (err) {
+          conn.end();
+          reject(err);
+        }
       }).on("error", (err) => {
+        conn.end();
         reject(err);
       }).connect(connParams);
     });
   }
-  async setupTunnels(conn, backendHost, tunnelConfigs) {
+  async setupTunnels(conn, backendId, backendHost, tunnelConfigs) {
     try {
       return await Promise.all(
         tunnelConfigs.map(
-          (config) => new Promise((resolve, reject) => {
-            conn.forwardOut(
-              "127.0.0.1",
-              config.localPort,
-              backendHost,
-              config.remotePort,
-              (err, channel) => err ? reject(err) : resolve(channel)
-            );
+          (config, ind) => new Promise((resolve, reject) => {
+            try {
+              conn.forwardOut(
+                "127.0.0.1",
+                config.localPort,
+                backendHost,
+                config.remotePort,
+                (err, stream) => {
+                  if (err) {
+                    reject(err);
+                    return;
+                  }
+                  const serv = createServer((sock) => {
+                    sock.pipe(stream).pipe(sock);
+                  });
+                  serv.listen(config.localPort, () => {
+                    const connStr = `${config.localPort}:${backendHost}:${config.remotePort}`;
+                    this.listeningServers.set(`${backendId}:${ind}`, serv);
+                    resolve(connStr);
+                  });
+                }
+              );
+            } catch (err) {
+              reject(err);
+            }
           })
         )
       );
     } catch (err) {
       throw err;
+    }
+  }
+  disconnectAll() {
+    try {
+      const conns = Array.from(this.connections);
+      const listeners = Array.from(this.listeningServers);
+      conns.map((c) => c?.[1]?.end());
+      listeners.map((s) => s?.[1]?.close());
+    } catch (err) {
     }
   }
   disconnect(backendId) {
@@ -93,6 +126,9 @@ var SSHManager = class {
       conn.end();
       this.connections.delete(backendId);
     }
+    const keys = Array.from(this.listeningServers).filter((k) => k[0].startsWith(backendId));
+    keys.map((k) => k?.[1].close());
+    keys.map((k) => this.listeningServers.delete(k[0]));
   }
 };
 
