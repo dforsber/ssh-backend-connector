@@ -159,6 +159,7 @@ describe("SSHManager", () => {
       // Create manager with short timeout
       const managerWithTimeout = new SSHManager(mockStoreManager, {
         connectionTimeout: 100, // 100ms timeout
+        debug: true,
       });
 
       await expect(managerWithTimeout.connect(mockBackend.id)).rejects.toThrow(
@@ -177,6 +178,7 @@ describe("SSHManager", () => {
       // Create manager with max 1 connection
       const managerWithLimit = new SSHManager(mockStoreManager, {
         maxConcurrentConnections: 1,
+        debug: true,
       });
 
       // First connection should succeed
