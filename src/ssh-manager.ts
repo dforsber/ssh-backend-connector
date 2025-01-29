@@ -121,16 +121,6 @@ export class SSHManager {
                     });
                   }
                 );
-                if (serv) {
-                  const connStr = `${config.localPort}:${backendHost}:${config.remotePort}`;
-                  await new Promise((resolve) =>
-                    serv.listen(config.localPort, () => resolve(connStr))
-                  );
-                  this.listeningServers.set(`${backendId}:${ind}`, serv);
-                  resolve(connStr);
-                } else {
-                  reject("Failed to create local listening server");
-                }
               } catch (err) {
                 reject(err);
               }
