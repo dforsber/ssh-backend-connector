@@ -143,7 +143,7 @@ export class SSHManager {
       const listeners = Array.from(this.listeningServers);
       conns.map((c) => c?.[1]?.end());
       listeners.map((s) => s?.[1]?.close());
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       //console.error(err);
     }
