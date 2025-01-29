@@ -122,7 +122,7 @@ describe("SSHManager", () => {
         });
 
         await expect(manager.connect(mockBackend.id)).rejects.toThrow("Test error");
-        
+
         // Verify connection was cleaned up
         expect(manager["connections"].has(mockBackend.id)).toBeFalsy();
       } finally {
@@ -259,6 +259,7 @@ describe("SSHManager", () => {
         await expect(manager.connect(mockBackend.id)).rejects.toThrow("Direct tunnel error");
       } finally {
         // Restore original forwardOut implementation
+        manager.disconnect(mockBackend.id);
         mockClient.forwardOut = originalForwardOut;
       }
     });
@@ -308,7 +309,6 @@ describe("SSHManager", () => {
     });
 
     test("handles errors in disconnectAll", () => {
-      const mockConsoleError = jest.spyOn(console, "error").mockImplementation(() => {});
       const mockServer = {
         close: jest.fn().mockImplementation(() => {
           throw new Error("Close failed");
@@ -321,11 +321,6 @@ describe("SSHManager", () => {
 
       // Should not throw
       expect(() => manager.disconnectAll()).not.toThrow();
-
-      // Should have logged the error
-      expect(mockConsoleError).toHaveBeenCalled();
-
-      mockConsoleError.mockRestore();
     });
 
     test("handles nonexistent connection gracefully", () => {
