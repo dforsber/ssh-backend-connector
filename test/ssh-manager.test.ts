@@ -73,12 +73,14 @@ describe("SSHManager", () => {
     });
 
     test("creates SSH connection successfully - with tunnel", async () => {
-      const mockStream = new Socket();
+      const mockStream = {
+        pipe: jest.fn().mockReturnThis(),
+      } as unknown as ClientChannel;
       const mockClientSocket = new Socket();
       
       // Mock stream data events for verification
-      const streamDataSpy = jest.spyOn(mockStream, 'pipe');
-      const socketDataSpy = jest.spyOn(mockClientSocket, 'pipe');
+      const streamPipeSpy = jest.spyOn(mockStream, 'pipe');
+      const socketPipeSpy = jest.spyOn(mockClientSocket, 'pipe');
 
       // @ts-expect-error
       mockClient.forwardOut = function (_a, _b, _c, _d, cb) {
@@ -134,8 +136,8 @@ describe("SSHManager", () => {
       });
 
       // Verify stream piping
-      expect(streamDataSpy).toHaveBeenCalled();
-      expect(socketDataSpy).toHaveBeenCalled();
+      expect(streamPipeSpy).toHaveBeenCalled();
+      expect(socketPipeSpy).toHaveBeenCalled();
       
       // Verify server setup
       expect(mockServer.listen).toHaveBeenCalledWith(11234, expect.any(Function));
@@ -143,8 +145,8 @@ describe("SSHManager", () => {
       manager.disconnectAll();
       
       // Clean up
-      streamDataSpy.mockRestore();
-      socketDataSpy.mockRestore();
+      streamPipeSpy.mockRestore();
+      socketPipeSpy.mockRestore();
       jest.restoreAllMocks();
     });
 
