@@ -5,11 +5,11 @@ set -e
 mkdir -p examples/test-keys
 
 # Generate SSH key pair
-ssh-keygen -t rsa -b 2048 -C "test@example.com" -f examples/test-keys/id_rsa -N ""
+ssh-keygen -t ed25519 -C "test@example.com" -f examples/test-keys/id_ed25519 -N ""
 
 # Read the keys into variables for the examples
-PRIVATE_KEY=$(cat examples/test-keys/id_rsa)
-PUBLIC_KEY=$(cat examples/test-keys/id_rsa.pub)
+PRIVATE_KEY=$(cat examples/test-keys/id_ed25519)
+PUBLIC_KEY=$(cat examples/test-keys/id_ed25519.pub)
 
 # Create a JavaScript module with the keys
 cat > examples/test-keys/keys.js << EOL

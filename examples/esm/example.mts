@@ -4,22 +4,28 @@ import type { Backend } from "../../dist/esm/types.js";
 async function main(): Promise<void> {
   try {
     // Initialize the store manager with a custom path
+    // and connect with a password
     const storeManager = new SSHStoreManager("./ssh-store.json");
-
-    // Connect with a password
     await storeManager.connect("your-Secure-password_888");
 
     // Example backend configuration
     const backend: Backend = {
       id: "example-server",
       name: "Example Server",
-      host: "example.com",
-      port: 22,
-      username: "user",
+      host: "localhost",
+      port: 8022,
+      username: "root",
       keyPairId: "key1",
+      tunnels: [
+        {
+          localPort: 8081,
+          remotePort: 8081,
+        },
+      ],
     };
+    await storeManager.saveBackend(backend);
 
-    // Create and save an SSH key pair first
+    // NOTE: Create and save an SSH key pair first
     // Import the test keys
     const { testKeys } = await import("../test-keys/keys.js");
     const keyPair = {
@@ -30,24 +36,13 @@ async function main(): Promise<void> {
     };
     await storeManager.saveKeyPair(keyPair);
 
-    // Save the backend configuration
-    await storeManager.saveBackend(backend);
-
     // Create an SSH manager instance with custom configuration
     const sshManager = new SSHManager(storeManager, {
       connectionTimeout: 20000, // 20 seconds
       maxConcurrentConnections: 5, // Maximum 5 concurrent connections
     });
-    const connection = await sshManager.connect(backend.id);
+    await sshManager.connect(backend.id);
     console.log("Connected successfully!");
-
-    // Setup a tunnel
-    await sshManager.setupTunnel(backend.id, [
-      {
-        remotePort: 5432,
-        localPort: 54320,
-      },
-    ]);
 
     // Cleanup
     sshManager.disconnect(backend.id);
