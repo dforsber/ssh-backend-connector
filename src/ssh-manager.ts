@@ -143,19 +143,20 @@ export class SSHManager {
       const listeners = Array.from(this.listeningServers);
       conns.map((c) => c?.[1]?.end());
       listeners.map((s) => s?.[1]?.close());
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      console.error(err);
+      //console.error(err);
     }
   }
 
   public disconnect(backendId: string): void {
     const conn = this.connections.get(backendId);
     if (conn) {
-      Array.from(this.listeningServers)
-        .filter((k) => k[0].startsWith(backendId))
-        .map((k) => k?.[1].close());
       conn.end();
       this.connections.delete(backendId);
     }
+    const keys = Array.from(this.listeningServers).filter((k) => k[0].startsWith(backendId));
+    keys.map((k) => k?.[1].close());
+    keys.map((k) => this.listeningServers.delete(k[0]));
   }
 }
