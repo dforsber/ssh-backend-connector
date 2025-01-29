@@ -45,6 +45,12 @@ var SSHManager = class {
     const keyPair = await this.store.getKeyPair(backend.keyPairId);
     if (!keyPair) throw new Error("SSH key pair not found");
     const conn = new Client();
+    const connParams = {
+      host: backend.host,
+      port: backend.port,
+      username: backend.username,
+      privateKey: keyPair.privateKey
+    };
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         conn.end();
@@ -59,12 +65,7 @@ var SSHManager = class {
         resolve(conn);
       }).on("error", (err) => {
         reject(err);
-      }).connect({
-        host: backend.host,
-        port: backend.port,
-        username: backend.username,
-        privateKey: keyPair.privateKey
-      });
+      }).connect(connParams);
     });
   }
   async setupTunnels(conn, backendHost, tunnelConfigs) {
