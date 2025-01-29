@@ -229,6 +229,34 @@ describe("SSHManager", () => {
       );
     });
 
+    test("handles tunnel setup error in try block", async () => {
+      mockStoreManager.getBackend.mockResolvedValue({
+        ...mockBackend,
+        tunnels: [{ localPort: 11234, remotePort: 14321 }],
+      });
+      mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
+
+      // Mock forwardOut to throw directly
+      mockClient.forwardOut = jest.fn().mockImplementation(() => {
+        throw new Error("Direct tunnel error");
+      });
+
+      await expect(manager.connect(mockBackend.id)).rejects.toThrow("Direct tunnel error");
+    });
+
+    test("handles tunnel setup error in catch block", async () => {
+      mockStoreManager.getBackend.mockResolvedValue({
+        ...mockBackend,
+        tunnels: [{ localPort: 11234, remotePort: 14321 }],
+      });
+      mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
+
+      // Mock Promise.all to throw
+      jest.spyOn(Promise, 'all').mockRejectedValueOnce(new Error("Tunnel setup failed"));
+
+      await expect(manager.connect(mockBackend.id)).rejects.toThrow("Tunnel setup failed");
+    });
+
     test("increments attempt count within reset time", async () => {
       const backendId = "test-backend";
       const recentTime = Date.now() - 1000; // Recent attempt
@@ -258,6 +286,23 @@ describe("SSHManager", () => {
 
       expect(mockClient.end).toHaveBeenCalled();
       expect(manager["connections"].has(mockBackend.id)).toBeFalsy();
+    });
+
+    test("handles errors in disconnectAll", () => {
+      const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const mockServer = { close: jest.fn().mockImplementation(() => { throw new Error("Close failed"); }) };
+      
+      // Set up a connection and server that will throw on disconnect
+      manager["connections"].set(mockBackend.id, mockClient);
+      manager["listeningServers"].set(`${mockBackend.id}:0`, mockServer as any);
+      
+      // Should not throw
+      expect(() => manager.disconnectAll()).not.toThrow();
+      
+      // Should have logged the error
+      expect(mockConsoleError).toHaveBeenCalled();
+      
+      mockConsoleError.mockRestore();
     });
 
     test("handles nonexistent connection gracefully", () => {
