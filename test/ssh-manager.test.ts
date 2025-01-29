@@ -229,7 +229,7 @@ describe("SSHManager", () => {
       );
     });
 
-    test("handles tunnel setup error in try block", async () => {
+    test.only("handles tunnel setup error in try block", async () => {
       mockStoreManager.getBackend.mockResolvedValue({
         ...mockBackend,
         tunnels: [{ localPort: 11234, remotePort: 14321 }],
