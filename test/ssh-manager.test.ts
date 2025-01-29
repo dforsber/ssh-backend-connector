@@ -126,15 +126,12 @@ describe("SSHManager", () => {
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
       await manager.connect(mockBackend.id);
       const client = new Socket();
-      expect(
+      await expect(
         new Promise((resolve, reject) => {
-          try {
-            client.connect(11234, "127.0.0.1", () => resolve("Connected"));
-          } catch (err) {
-            reject(err);
-          }
+          client.on('error', (err) => reject(err));
+          client.connect(11234, "127.0.0.1", () => resolve("Connected"));
         })
-      ).rejects.toThrow();
+      ).rejects.toThrow('connect ECONNREFUSED');
       manager.disconnect(mockBackend.id);
     });
 
