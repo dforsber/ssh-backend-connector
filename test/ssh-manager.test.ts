@@ -125,7 +125,7 @@ describe("SSHManager", () => {
 
       // Capture the connection handler to test piping
       let capturedConnectionHandler: ((sock: Socket) => void) | undefined;
-      jest.spyOn(require('node:net'), 'createServer').mockImplementation((handler) => {
+      jest.spyOn(require('node:net'), 'createServer').mockImplementation((handler: (sock: Socket) => void) => {
         capturedConnectionHandler = handler;
         return mockServer;
       });
