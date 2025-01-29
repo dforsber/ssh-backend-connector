@@ -229,19 +229,27 @@ describe("SSHManager", () => {
       );
     });
 
-    test.only("handles tunnel setup error in try block", async () => {
+    test("handles tunnel setup error in try block", async () => {
       mockStoreManager.getBackend.mockResolvedValue({
         ...mockBackend,
         tunnels: [{ localPort: 11234, remotePort: 14321 }],
       });
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
 
-      // Mock forwardOut to throw directly
-      mockClient.forwardOut = jest.fn().mockImplementation(() => {
-        throw new Error("Direct tunnel error");
-      });
+      // Store original forwardOut implementation
+      const originalForwardOut = mockClient.forwardOut;
 
-      await expect(manager.connect(mockBackend.id)).rejects.toThrow("Direct tunnel error");
+      try {
+        // Mock forwardOut to throw directly
+        mockClient.forwardOut = jest.fn().mockImplementation(() => {
+          throw new Error("Direct tunnel error");
+        });
+
+        await expect(manager.connect(mockBackend.id)).rejects.toThrow("Direct tunnel error");
+      } finally {
+        // Restore original forwardOut implementation
+        mockClient.forwardOut = originalForwardOut;
+      }
     });
 
     test("handles tunnel setup error in catch block", async () => {
