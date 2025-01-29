@@ -124,20 +124,7 @@ describe("SSHManager", () => {
       });
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
       
-      // Connect should still succeed but tunnel setup will fail silently
-      await manager.connect(mockBackend.id);
-      
-      // Wait a bit for the server to fail setting up
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const client = new Socket();
-      await expect(
-        new Promise((resolve, reject) => {
-          client.on('error', (err) => reject(err));
-          client.on('connect', () => resolve("Connected"));
-          client.connect(11234, "127.0.0.1");
-        })
-      ).rejects.toThrow('connect ECONNREFUSED');
+      await expect(manager.connect(mockBackend.id)).rejects.toThrow('Test error');
       manager.disconnect(mockBackend.id);
     });
 

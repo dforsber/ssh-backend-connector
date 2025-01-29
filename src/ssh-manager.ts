@@ -108,9 +108,13 @@ export class SSHManager {
                     backendHost,
                     config.remotePort,
                     (err, stream) => {
-                      err
-                        ? sock.end() && console.error("Error forwarding connection: " + err)
-                        : sock.pipe(stream).pipe(sock);
+                      if (err) {
+                        sock.end();
+                        console.error("Error forwarding connection: " + err);
+                        serv.close();
+                        return;
+                      }
+                      sock.pipe(stream).pipe(sock);
                     }
                   );
                 });
