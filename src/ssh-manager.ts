@@ -1,4 +1,4 @@
-import { Client, ClientChannel } from "ssh2";
+import { Client, ClientChannel, ConnectConfig } from "ssh2";
 import { SSHStoreManager } from "./ssh-store";
 import { SSHManagerConfig, TunnelConfig } from "./types";
 
@@ -57,6 +57,12 @@ export class SSHManager {
     if (!keyPair) throw new Error("SSH key pair not found");
 
     const conn = new Client();
+    const connParams: ConnectConfig = {
+      host: backend.host,
+      port: backend.port,
+      username: backend.username,
+      privateKey: keyPair.privateKey,
+    };
 
     return new Promise((resolve, reject) => {
       // Set connection timeout
@@ -76,12 +82,7 @@ export class SSHManager {
         .on("error", (err) => {
           reject(err);
         })
-        .connect({
-          host: backend.host,
-          port: backend.port,
-          username: backend.username,
-          privateKey: keyPair.privateKey,
-        });
+        .connect(connParams);
     });
   }
 
