@@ -79,10 +79,10 @@ describe("SSHManager", () => {
       const mockClientSocket = {
         pipe: jest.fn().mockReturnThis(),
       } as unknown as Socket;
-      
+
       // Mock stream data events for verification
-      const streamPipeSpy = jest.spyOn(mockStream, 'pipe');
-      const socketPipeSpy = jest.spyOn(mockClientSocket, 'pipe');
+      const streamPipeSpy = jest.spyOn(mockStream, "pipe");
+      const socketPipeSpy = jest.spyOn(mockClientSocket, "pipe");
 
       // @ts-expect-error
       mockClient.forwardOut = function (_a, _b, _c, _d, cb) {
@@ -125,10 +125,12 @@ describe("SSHManager", () => {
 
       // Capture the connection handler to test piping
       let capturedConnectionHandler: ((sock: Socket) => void) | undefined;
-      jest.spyOn(require('node:net'), 'createServer').mockImplementation((handler: (sock: Socket) => void) => {
-        capturedConnectionHandler = handler;
-        return mockServer;
-      });
+      jest
+        .spyOn(require("node:net"), "createServer")
+        .mockImplementation((handler: (sock: Socket) => void) => {
+          capturedConnectionHandler = handler;
+          return mockServer;
+        });
 
       const conn = await manager.connect(mockBackend.id);
 
@@ -142,10 +144,10 @@ describe("SSHManager", () => {
 
       // Verify server setup
       expect(mockServer.listen).toHaveBeenCalledWith(11234, expect.any(Function));
-      
+
       // Test the connection handler was captured
       expect(capturedConnectionHandler).toBeDefined();
-      
+
       // Test the piping logic
       if (capturedConnectionHandler) {
         capturedConnectionHandler(mockClientSocket);
@@ -154,7 +156,7 @@ describe("SSHManager", () => {
       }
 
       manager.disconnectAll();
-      
+
       // Clean up
       streamPipeSpy.mockRestore();
       socketPipeSpy.mockRestore();
