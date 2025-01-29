@@ -114,22 +114,21 @@ describe("SSHManager", () => {
         handler(mockClientSocket);
       });
 
-      // Mock createServer
+      // Mock createServer to capture and test the connection handler
       const mockServer = {
         listen: jest.fn((port, cb) => {
           expect(port).toBe(11234);
           if (cb) cb();
           return mockServer;
         }),
-        on: jest.fn((event, handler) => {
-          if (event === 'connection') {
-            serverConnection(handler);
-          }
-          return mockServer;
-        }),
       };
 
-      jest.spyOn(require('node:net'), 'createServer').mockImplementation(() => mockServer);
+      // Capture the connection handler to test piping
+      let capturedConnectionHandler: ((sock: Socket) => void) | undefined;
+      jest.spyOn(require('node:net'), 'createServer').mockImplementation((handler) => {
+        capturedConnectionHandler = handler;
+        return mockServer;
+      });
 
       const conn = await manager.connect(mockBackend.id);
 
@@ -141,12 +140,18 @@ describe("SSHManager", () => {
         privateKey: mockKeyPair.privateKey,
       });
 
-      // Verify stream piping
-      expect(streamPipeSpy).toHaveBeenCalled();
-      expect(socketPipeSpy).toHaveBeenCalled();
-      
       // Verify server setup
       expect(mockServer.listen).toHaveBeenCalledWith(11234, expect.any(Function));
+      
+      // Test the connection handler was captured
+      expect(capturedConnectionHandler).toBeDefined();
+      
+      // Test the piping logic
+      if (capturedConnectionHandler) {
+        capturedConnectionHandler(mockClientSocket);
+        expect(mockClientSocket.pipe).toHaveBeenCalledWith(mockStream);
+        expect(mockStream.pipe).toHaveBeenCalledWith(mockClientSocket);
+      }
 
       manager.disconnectAll();
       
