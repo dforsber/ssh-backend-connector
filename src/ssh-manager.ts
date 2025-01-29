@@ -5,8 +5,8 @@ import { createServer, Server } from "node:net";
 
 export class SSHManager {
   private store: SSHStoreManager;
-  private readonly maxConnectionAttempts = 3;
-  private readonly attemptResetTimeMs = 300000; // 5 minutes
+  private readonly maxConnectionAttempts: number;
+  private readonly attemptResetTimeMs: number;
   private readonly connectionTimeout: number;
   private readonly maxConcurrentConnections: number;
   private connectionAttempts: Map<string, { count: number; lastAttempt: number }>;
@@ -19,6 +19,8 @@ export class SSHManager {
     this.connectionAttempts = new Map();
     this.connectionTimeout = config?.connectionTimeout ?? 30000; // Default 30 seconds
     this.maxConcurrentConnections = config?.maxConcurrentConnections ?? 10; // Default 10 connections
+    this.maxConnectionAttempts = config?.maxConnectionAttempts ?? 5;
+    this.attemptResetTimeMs = config?.attemptResetTimeMs ?? 10_000; // 10s
   }
 
   private checkRateLimit(backendId: string): void {

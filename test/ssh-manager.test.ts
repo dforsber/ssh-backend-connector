@@ -49,7 +49,10 @@ describe("SSHManager", () => {
       return this;
     });
 
-    manager = new SSHManager(mockStoreManager);
+    manager = new SSHManager(mockStoreManager, {
+      maxConnectionAttempts: 3,
+      attemptResetTimeMs: 5_000,
+    });
   });
 
   afterEach(() => {

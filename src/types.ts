@@ -27,4 +27,6 @@ export interface TunnelConfig {
 export interface SSHManagerConfig {
   connectionTimeout?: number; // Connection timeout in milliseconds
   maxConcurrentConnections?: number; // Maximum number of concurrent connections
+  maxConnectionAttempts?: number; // for rate limiting: max connection attempts per attemptResetTimeMs
+  attemptResetTimeMs?: number; // for rate limiting: time range for calculating connection attempts
 }
