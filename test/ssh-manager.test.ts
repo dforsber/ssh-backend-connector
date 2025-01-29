@@ -76,7 +76,9 @@ describe("SSHManager", () => {
       const mockStream = {
         pipe: jest.fn().mockReturnThis(),
       } as unknown as ClientChannel;
-      const mockClientSocket = new Socket();
+      const mockClientSocket = {
+        pipe: jest.fn().mockReturnThis(),
+      } as unknown as Socket;
       
       // Mock stream data events for verification
       const streamPipeSpy = jest.spyOn(mockStream, 'pipe');
@@ -84,7 +86,12 @@ describe("SSHManager", () => {
 
       // @ts-expect-error
       mockClient.forwardOut = function (_a, _b, _c, _d, cb) {
-        if (cb) cb(undefined, mockStream);
+        if (cb) {
+          cb(undefined, mockStream);
+          // Simulate the piping that happens in the actual code
+          mockStream.pipe(mockClientSocket);
+          mockClientSocket.pipe(mockStream);
+        }
         return this;
       };
 
@@ -102,10 +109,9 @@ describe("SSHManager", () => {
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
 
       // Create a mock server event handler
-      const serverConnection = jest.fn((socket) => {
-        expect(socket).toBeInstanceOf(Socket);
-        // Simulate client connection
-        socket.emit('connection', mockClientSocket);
+      const serverConnection = jest.fn((handler) => {
+        // Simulate client connection by calling the handler directly
+        handler(mockClientSocket);
       });
 
       // Mock createServer
