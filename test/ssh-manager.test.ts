@@ -252,7 +252,7 @@ describe("SSHManager", () => {
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
 
       // Mock Promise.all to throw
-      jest.spyOn(Promise, 'all').mockRejectedValueOnce(new Error("Tunnel setup failed"));
+      jest.spyOn(Promise, "all").mockRejectedValueOnce(new Error("Tunnel setup failed"));
 
       await expect(manager.connect(mockBackend.id)).rejects.toThrow("Tunnel setup failed");
     });
@@ -289,19 +289,23 @@ describe("SSHManager", () => {
     });
 
     test("handles errors in disconnectAll", () => {
-      const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-      const mockServer = { close: jest.fn().mockImplementation(() => { throw new Error("Close failed"); }) };
-      
+      const mockConsoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      const mockServer = {
+        close: jest.fn().mockImplementation(() => {
+          throw new Error("Close failed");
+        }),
+      };
+
       // Set up a connection and server that will throw on disconnect
       manager["connections"].set(mockBackend.id, mockClient);
       manager["listeningServers"].set(`${mockBackend.id}:0`, mockServer as any);
-      
+
       // Should not throw
       expect(() => manager.disconnectAll()).not.toThrow();
-      
+
       // Should have logged the error
       expect(mockConsoleError).toHaveBeenCalled();
-      
+
       mockConsoleError.mockRestore();
     });
 
