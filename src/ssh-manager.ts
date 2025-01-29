@@ -76,13 +76,17 @@ export class SSHManager {
       conn
         .on("ready", async () => {
           clearTimeout(timeoutId);
-          await this.setupTunnels(conn, backend.id, backend.host, backend.tunnels ?? []).catch(
-            (err) => reject(err)
-          );
-          this.connections.set(backendId, conn);
-          resolve(conn);
+          try {
+            await this.setupTunnels(conn, backend.id, backend.host, backend.tunnels ?? []);
+            this.connections.set(backendId, conn);
+            resolve(conn);
+          } catch (err) {
+            conn.end();
+            reject(err);
+          }
         })
         .on("error", (err) => {
+          conn.end();
           reject(err);
         })
         .connect(connParams);
