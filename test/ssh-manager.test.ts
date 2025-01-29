@@ -105,26 +105,18 @@ describe("SSHManager", () => {
     });
 
     test("does not create SSH connection due to tunnel error", async () => {
-      // Mock forwardOut to simulate error
       mockClient.forwardOut = jest.fn().mockImplementation((_a, _b, _c, _d, cb) => {
         if (cb) cb(new Error("Test error"));
         return mockClient;
       });
 
-      manager = new SSHManager(mockStoreManager);
-
       mockStoreManager.getBackend.mockResolvedValue({
         ...mockBackend,
-        tunnels: [
-          {
-            localPort: 11234,
-            remotePort: 14321,
-          },
-        ],
+        tunnels: [{ localPort: 11234, remotePort: 14321 }],
       });
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
-      
-      await expect(manager.connect(mockBackend.id)).rejects.toThrow('Test error');
+
+      await expect(manager.connect(mockBackend.id)).rejects.toThrow("Test error");
       manager.disconnect(mockBackend.id);
     });
 

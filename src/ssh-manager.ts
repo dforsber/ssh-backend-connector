@@ -99,25 +99,28 @@ export class SSHManager {
       return await Promise.all(
         tunnelConfigs.map(
           (config, ind) =>
-            new Promise<string>(async (resolve, reject) => {
+            new Promise<string>((resolve, reject) => {
               try {
-                const serv = createServer((sock) => {
-                  conn.forwardOut(
-                    sock.remoteAddress ?? "",
-                    sock.remotePort ?? -1,
-                    backendHost,
-                    config.remotePort,
-                    (err, stream) => {
-                      if (err) {
-                        sock.end();
-                        console.error("Error forwarding connection: " + err);
-                        serv.close();
-                        return;
-                      }
-                      sock.pipe(stream).pipe(sock);
+                conn.forwardOut(
+                  "127.0.0.1",
+                  config.localPort,
+                  backendHost,
+                  config.remotePort,
+                  (err, stream) => {
+                    if (err) {
+                      reject(err);
+                      return;
                     }
-                  );
-                });
+                    const serv = createServer((sock) => {
+                      sock.pipe(stream).pipe(sock);
+                    });
+                    serv.listen(config.localPort, () => {
+                      const connStr = `${config.localPort}:${backendHost}:${config.remotePort}`;
+                      this.listeningServers.set(`${backendId}:${ind}`, serv);
+                      resolve(connStr);
+                    });
+                  }
+                );
                 if (serv) {
                   const connStr = `${config.localPort}:${backendHost}:${config.remotePort}`;
                   await new Promise((resolve) =>
