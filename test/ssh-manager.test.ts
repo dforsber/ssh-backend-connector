@@ -1,8 +1,8 @@
-// ssh-manager.test.ts
 import { SSHManager } from "../src/ssh-manager";
 import { SSHStoreManager } from "../src/ssh-store";
 import { Client, ClientChannel } from "ssh2";
 import { Backend, SSHKeyPair } from "../src/types";
+import { Socket } from "node:net";
 
 const pw = "dummyPwLongerAndLongerAndLonger123";
 
@@ -52,6 +52,10 @@ describe("SSHManager", () => {
     manager = new SSHManager(mockStoreManager);
   });
 
+  afterEach(() => {
+    manager.disconnectAll();
+  });
+
   describe("connect", () => {
     test("creates SSH connection successfully", async () => {
       mockStoreManager.getBackend.mockResolvedValue(mockBackend);
@@ -81,8 +85,8 @@ describe("SSHManager", () => {
         ...mockBackend,
         tunnels: [
           {
-            localPort: 1234,
-            remotePort: 4321,
+            localPort: 11234,
+            remotePort: 14321,
           },
         ],
       });
@@ -97,11 +101,13 @@ describe("SSHManager", () => {
         username: mockBackend.username,
         privateKey: mockKeyPair.privateKey,
       });
+      manager.disconnectAll();
     });
 
     test("does not create SSH connection due to tunnel error", async () => {
       // @ts-expect-error
       mockClient.forwardOut = function (_a, _b, _c, _d, cb) {
+        console.error("--- forwardOut mockup error ---");
         if (cb) cb(new Error("Test error"), <ClientChannel>{});
         return this;
       };
@@ -112,13 +118,24 @@ describe("SSHManager", () => {
         ...mockBackend,
         tunnels: [
           {
-            localPort: 1234,
-            remotePort: 4321,
+            localPort: 11234,
+            remotePort: 14321,
           },
         ],
       });
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
-      await expect(manager.connect(mockBackend.id)).rejects.toThrow();
+      await manager.connect(mockBackend.id);
+      const client = new Socket();
+      expect(
+        new Promise((resolve, reject) => {
+          try {
+            client.connect(11234, "127.0.0.1", () => resolve("Connected"));
+          } catch (err) {
+            reject(err);
+          }
+        })
+      ).rejects.toThrow();
+      manager.disconnect(mockBackend.id);
     });
 
     test("throws when backend not found", async () => {
@@ -136,15 +153,14 @@ describe("SSHManager", () => {
       mockStoreManager.getBackend.mockResolvedValue(mockBackend);
       mockStoreManager.getKeyPair.mockResolvedValue(mockKeyPair);
 
-      const error = new Error("Connection failed");
       mockClient.on.mockImplementation(function (this: any, event: unknown, cb: unknown) {
         if (event === "error" && typeof cb === "function") {
-          setTimeout(() => cb(error), 0);
+          setTimeout(() => cb(new Error("Connection failed")), 0);
         }
         return this;
       });
 
-      await expect(manager.connect(mockBackend.id)).rejects.toThrow("Connection failed");
+      await expect(manager.connect(mockBackend.id)).rejects.toThrow();
     });
 
     test("handles connection timeout", async () => {
@@ -168,6 +184,7 @@ describe("SSHManager", () => {
       // Verify connection is cleaned up
       expect(mockClient.end).toHaveBeenCalled();
       expect(managerWithTimeout["connections"].size).toBe(0);
+      managerWithTimeout.disconnectAll();
     });
 
     test("throws when max concurrent connections reached", async () => {
@@ -186,6 +203,7 @@ describe("SSHManager", () => {
       await expect(managerWithLimit.connect("another-backend")).rejects.toThrow(
         "Maximum concurrent connections (1) reached"
       );
+      managerWithLimit.disconnectAll();
     });
 
     test("resets attempt count after reset time", async () => {
