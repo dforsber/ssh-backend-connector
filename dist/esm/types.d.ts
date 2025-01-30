@@ -15,6 +15,7 @@ export interface Backend {
     username: string;
     keyPairId: string;
     tunnels?: TunnelConfig[];
+    data?: string;
 }
 export interface TunnelConfig {
     localPort: number;
