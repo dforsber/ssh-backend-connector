@@ -17,6 +17,7 @@ export interface Backend {
   username: string;
   keyPairId: string;
   tunnels?: TunnelConfig[];
+  data?: string; // piggy backed arbitrary data
 }
 
 export interface TunnelConfig {
