@@ -68,10 +68,23 @@ describe("SSHManager", () => {
 
       expect(conn).toBe(mockClient);
       expect(mockClient.connect).toHaveBeenCalledWith({
-        host: mockBackend.host,
-        port: mockBackend.port,
-        username: mockBackend.username,
-        privateKey: mockKeyPair.privateKey,
+        algorithms: {
+          cipher: ["aes128-gcm@openssh.com", "aes256-gcm@openssh.com", "aes128-ctr"],
+          compress: ["none"],
+          kex: [
+            "curve25519-sha256@libssh.org",
+            "ecdh-sha2-nistp256",
+            "diffie-hellman-group14-sha1",
+          ],
+        },
+        host: "192.168.1.100",
+        keepaliveCountMax: 3,
+        keepaliveInterval: 10000,
+        port: 22,
+        privateKey: "private-key-content",
+        readyTimeout: 30000,
+        tryKeyboard: false,
+        username: "admin",
       });
     });
 
@@ -81,6 +94,7 @@ describe("SSHManager", () => {
       } as unknown as ClientChannel;
       const mockClientSocket = {
         pipe: jest.fn().mockReturnThis(),
+        setNoDelay: jest.fn().mockReturnThis(),
       } as unknown as Socket;
 
       // Mock stream data events for verification
@@ -139,10 +153,23 @@ describe("SSHManager", () => {
 
       expect(conn).toBe(mockClient);
       expect(mockClient.connect).toHaveBeenCalledWith({
-        host: mockBackend.host,
-        port: mockBackend.port,
-        username: mockBackend.username,
-        privateKey: mockKeyPair.privateKey,
+        algorithms: {
+          cipher: ["aes128-gcm@openssh.com", "aes256-gcm@openssh.com", "aes128-ctr"],
+          compress: ["none"],
+          kex: [
+            "curve25519-sha256@libssh.org",
+            "ecdh-sha2-nistp256",
+            "diffie-hellman-group14-sha1",
+          ],
+        },
+        host: "192.168.1.100",
+        keepaliveCountMax: 3,
+        keepaliveInterval: 10000,
+        port: 22,
+        privateKey: "private-key-content",
+        readyTimeout: 30000,
+        tryKeyboard: false,
+        username: "admin",
       });
 
       // Verify server setup
