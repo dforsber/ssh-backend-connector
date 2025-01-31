@@ -14,6 +14,7 @@ export declare class SSHManager {
     private checkRateLimit;
     connect(backendId: string): Promise<Client>;
     private setupTunnels;
+    private closeTunnels;
     disconnectAll(): void;
     disconnect(backendId: string): void;
 }

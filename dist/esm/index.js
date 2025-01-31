@@ -52,28 +52,68 @@ var SSHManager = class {
       host: backend.host,
       port: backend.port,
       username: backend.username,
-      privateKey: keyPair.privateKey
+      privateKey: keyPair.privateKey,
       // debug: (m) => console.log(m),
+      readyTimeout: this.connectionTimeout,
+      keepaliveInterval: 1e4,
+      keepaliveCountMax: 3,
+      tryKeyboard: false,
+      algorithms: {
+        kex: ["curve25519-sha256@libssh.org", "ecdh-sha2-nistp256", "diffie-hellman-group14-sha1"],
+        cipher: ["aes128-gcm@openssh.com", "aes256-gcm@openssh.com", "aes128-ctr"],
+        compress: ["none"]
+      }
     };
+    conn.on("keyboard-interactive", (name, instructions, lang, prompts, finish) => {
+      console.log("Keyboard interactive auth requested");
+      finish([]);
+    });
+    conn.on("handshake", (negotiated) => {
+      console.log("SSH Handshake completed", negotiated);
+    });
+    conn.on("close", () => {
+      console.log("Connection closed");
+      this.connections.delete(backendId);
+    });
     return new Promise((resolve, reject) => {
+      let isResolved = false;
       const timeoutId = setTimeout(() => {
-        conn.end();
-        reject(new Error(`Connection timeout after ${this.connectionTimeout}ms`));
+        if (!isResolved) {
+          console.log("Connection timeout triggered");
+          isResolved = true;
+          conn.end();
+          reject(new Error(`Connection timeout after ${this.connectionTimeout}ms`));
+        }
       }, this.connectionTimeout);
       conn.on("ready", async () => {
+        console.log("Connection ready event fired");
         clearTimeout(timeoutId);
+        if (isResolved) return;
         try {
+          console.log("Setting up tunnels...");
           await this.setupTunnels(conn, backend.id, backend.host, backend.tunnels ?? []);
+          console.log("Tunnels setup completed");
           this.connections.set(backendId, conn);
+          isResolved = true;
           resolve(conn);
         } catch (err) {
+          console.error("Error in tunnel setup:", err);
+          if (!isResolved) {
+            isResolved = true;
+            conn.end();
+            reject(err);
+          }
+        }
+      }).on("error", (err) => {
+        console.error("Connection error:", err);
+        clearTimeout(timeoutId);
+        if (!isResolved) {
+          isResolved = true;
           conn.end();
           reject(err);
         }
-      }).on("error", (err) => {
-        conn.end();
-        reject(err);
       }).connect(connParams);
+      console.log("Connection attempt initiated");
     });
   }
   async setupTunnels(conn, backendId, backendHost, tunnelConfigs) {
@@ -85,7 +125,7 @@ var SSHManager = class {
               conn.forwardOut(
                 "127.0.0.1",
                 config.localPort,
-                backendHost,
+                "localhost",
                 config.remotePort,
                 (err, stream) => {
                   if (err) {
@@ -93,6 +133,7 @@ var SSHManager = class {
                     return;
                   }
                   const serv = createServer((sock) => {
+                    sock.setNoDelay(true);
                     sock.pipe(stream).pipe(sock);
                   });
                   serv.listen(config.localPort, () => {
@@ -109,7 +150,17 @@ var SSHManager = class {
         )
       );
     } catch (err) {
+      this.closeTunnels(backendId);
       throw err;
+    }
+  }
+  // Add this cleanup method
+  closeTunnels(backendId) {
+    for (const [key, server] of this.listeningServers.entries()) {
+      if (key.startsWith(`${backendId}:`)) {
+        if (server?.close) server?.close();
+        this.listeningServers.delete(key);
+      }
     }
   }
   disconnectAll() {
