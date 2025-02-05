@@ -1,12 +1,17 @@
 import { SSHKeyPair, Backend } from "./types";
 import { CryptoWrapper } from "./crypto-wrapper";
 import { JSONStore } from "./json-store";
+import { join } from "node:path";
+import { homedir } from "node:os";
+
+const HOMEDIR = homedir();
+const DEFAULT_STORE = join(HOMEDIR, ".ssh-store/data.json");
 
 export class SSHStoreManager {
   private store: JSONStore;
   private crypto?: CryptoWrapper;
 
-  constructor(storePath = ".ssh-store/data.json") {
+  constructor(storePath = DEFAULT_STORE) {
     this.store = new JSONStore(storePath);
   }
 

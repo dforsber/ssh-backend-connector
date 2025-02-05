@@ -23,7 +23,10 @@ export class JSONStore {
       }
 
       // Check if path contains invalid characters or is absolute
-      if (!/^[a-zA-Z0-9/._-]+$/.test(filePath)) {
+      if (
+        !/^[a-zA-Z0-9/._-]+$/.test(filePath) ||
+        (!/^[a-zA-Z0-9/\\.:_-]+$/.test(filePath) && process.platform === "win32")
+      ) {
         throw new Error("Invalid file path: contains invalid characters");
       }
 
