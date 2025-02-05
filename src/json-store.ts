@@ -22,14 +22,6 @@ export class JSONStore {
         throw new Error("Invalid file path: contains path traversal");
       }
 
-      // Check if path contains invalid characters or is absolute
-      if (
-        !/^[a-zA-Z0-9/._-]+$/.test(filePath) ||
-        (!/^[a-zA-Z0-9/\\.:_-]+$/.test(filePath) && process.platform === "win32")
-      ) {
-        throw new Error("Invalid file path: contains invalid characters");
-      }
-
       this.filePath = normalizedPath;
     } catch (error) {
       if (error instanceof Error) {
