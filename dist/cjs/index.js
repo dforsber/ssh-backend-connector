@@ -325,7 +325,7 @@ var JSONStore = class _JSONStore {
     try {
       const stats = await (0, import_promises.stat)(filepath);
       if (!stats) throw new Error("File read error");
-      if ((stats.mode & 511) !== 384) {
+      if ((stats.mode & 511) !== 384 && process.platform !== "win32") {
         throw new Error("Insecure file permissions detected - expected 0600");
       }
     } catch (error) {
