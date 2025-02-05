@@ -47,7 +47,7 @@ export class JSONStore {
     try {
       const stats = await stat(filepath);
       if (!stats) throw new Error("File read error");
-      if ((stats.mode & 0o777) !== 0o600) {
+      if ((stats.mode & 0o777) !== 0o600 && process.platform !== "win32") {
         throw new Error("Insecure file permissions detected - expected 0600");
       }
     } catch (error) {
