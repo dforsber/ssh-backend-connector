@@ -511,7 +511,7 @@ var JSONStore = class _JSONStore {
       if (filePath.includes("..") || normalizedPath.includes("..")) {
         throw new Error("Invalid file path: contains path traversal");
       }
-      if (!/^[a-zA-Z0-9/._-]+$/.test(filePath)) {
+      if (!/^[a-zA-Z0-9/._-]+$/.test(filePath) || !/^[a-zA-Z0-9/\\.:_-]+$/.test(filePath) && process.platform === "win32") {
         throw new Error("Invalid file path: contains invalid characters");
       }
       this.filePath = normalizedPath;
@@ -605,10 +605,14 @@ var JSONStore = class _JSONStore {
 };
 
 // src/ssh-store.ts
+var import_node_path2 = require("node:path");
+var import_node_os = require("node:os");
+var HOMEDIR = (0, import_node_os.homedir)();
+var DEFAULT_STORE = (0, import_node_path2.join)(HOMEDIR, ".ssh-store/data.json");
 var SSHStoreManager = class {
   store;
   crypto;
-  constructor(storePath = ".ssh-store/data.json") {
+  constructor(storePath = DEFAULT_STORE) {
     this.store = new JSONStore(storePath);
   }
   async connect(password) {

@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.28](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.27...v0.5.28) (2025-02-05)
+
 ### [0.5.27](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.26...v0.5.27) (2025-02-05)
 
 ### [0.5.26](https://github.com/dforsber/ssh-backend-connector/compare/v0.5.25...v0.5.26) (2025-02-05)
