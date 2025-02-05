@@ -136,7 +136,7 @@ describe("JSONStore", () => {
         expect.any(String),
         expect.objectContaining({
           mode: 0o600,
-          flag: "wx",
+          flag: "w",
         })
       );
       const value = await store.get("test");
@@ -156,7 +156,7 @@ describe("JSONStore", () => {
         expect.any(String),
         expect.objectContaining({
           mode: 0o600,
-          flag: "wx",
+          flag: "w",
         })
       );
       const value = await store.get("test");

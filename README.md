@@ -2,8 +2,6 @@
 
 > Secure SSH backend connection manager for applications with password protected encrypted key storage.
 
-🔒 **100% Test Coverage** | 🛡️ **Type-Safe** | 🔐 **AES-256-GCM Encryption**
-
 ## Features
 
 - Secure AES-256-GCM encryption for SSH keys
@@ -91,8 +89,7 @@ This package takes security seriously:
 ✓ Maximum concurrent connections limit  
 ✓ File size limits to prevent DoS  
 ✓ Secure file permissions (0600)  
-✓ Path traversal protection  
-✓ 100% test coverage ensures reliable security features
+✓ Path traversal protection
 
 ### Future Security Improvements
 

@@ -1,7 +1,10 @@
 // store.ts
 import { readFile, writeFile, mkdir, rename, unlink, stat } from "fs/promises";
 import { existsSync } from "fs";
-import { dirname, normalize } from "path";
+import { dirname, normalize } from "node:path";
+import { Mutex } from "async-mutex";
+
+const mutex = new Mutex();
 
 export class JSONStore {
   private data: Record<string, unknown>;
@@ -79,26 +82,28 @@ export class JSONStore {
   }
 
   private async saveStore(): Promise<void> {
-    const tmpPath = `${this.filePath}.tmp`;
-    const jsonData = JSON.stringify(this.data, null, 2);
+    await mutex.runExclusive(async () => {
+      const tmpPath = `${this.filePath}.tmp`;
+      const jsonData = JSON.stringify(this.data, null, 2);
 
-    try {
-      // Write to temp file first
-      await writeFile(tmpPath, jsonData, {
-        mode: 0o600, // Secure file permissions
-        flag: "wx", // Fail if temp file exists
-      });
-      // Atomic rename
-      await rename(tmpPath, this.filePath);
-    } finally {
-      // Clean up temp file if it exists
       try {
-        await unlink(tmpPath);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        // Ignore error if temp file doesn't exist
+        // Write to temp file first
+        await writeFile(tmpPath, jsonData, {
+          mode: 0o600, // Secure file permissions
+          flag: "w", // NOT Fail if temp file exists
+        });
+        // Atomic rename
+        await rename(tmpPath, this.filePath);
+      } finally {
+        // Clean up temp file if it exists
+        try {
+          await unlink(tmpPath);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (err) {
+          // Ignore error if temp file doesn't exist
+        }
       }
-    }
+    });
   }
 
   async get<T>(key: string): Promise<T | null> {
