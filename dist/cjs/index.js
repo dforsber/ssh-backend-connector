@@ -511,9 +511,6 @@ var JSONStore = class _JSONStore {
       if (filePath.includes("..") || normalizedPath.includes("..")) {
         throw new Error("Invalid file path: contains path traversal");
       }
-      if (!/^[a-zA-Z0-9/._-]+$/.test(filePath) || !/^[a-zA-Z0-9/\\.:_-]+$/.test(filePath) && process.platform === "win32") {
-        throw new Error("Invalid file path: contains invalid characters");
-      }
       this.filePath = normalizedPath;
     } catch (error) {
       if (error instanceof Error) {
